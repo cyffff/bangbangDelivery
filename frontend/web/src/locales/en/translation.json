@@ -1,0 +1,289 @@
+{
+  "app": {
+    "name": "BangBang Delivery",
+    "subtitle": "Connecting businesses with reliable transport on demand"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "reset": "Reset",
+    "more": "More",
+    "less": "Less",
+    "yes": "Yes",
+    "no": "No",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "welcome": "Welcome Back!",
+    "loginToContinue": "Login to continue using BangBang Delivery",
+    "usernameOrEmail": "Username or Email",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "or": "or",
+    "continueWithGoogle": "Continue with Google",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "createAccount": "Create Account",
+    "completeProfile": "Complete Profile",
+    "acceptTerms": "I agree to the",
+    "confirmPassword": "Confirm Password",
+    "loginSuccessful": "Login successful",
+    "logoutSuccessful": "Logout successful",
+    "registrationSuccessful": "Registration successful"
+  },
+  "menu": {
+    "home": "Home",
+    "demands": "Demands",
+    "journeys": "Journeys",
+    "orders": "Orders",
+    "about": "About",
+    "profile": "Profile",
+    "wallet": "Wallet",
+    "reviews": "Reviews",
+    "logout": "Logout"
+  },
+  "footer": {
+    "about": "About Us",
+    "contact": "Contact",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "help": "Help Center",
+    "rights": "© 2023 BangBang Delivery. All rights reserved."
+  },
+  "home": {
+    "hero": {
+      "title": "Connect Global Travelers with Shipping Needs",
+      "subtitle": "BangBang Delivery is a peer-to-peer platform connecting travelers with space in their luggage with people needing to ship items internationally.",
+      "publishDemand": "Publish Demand",
+      "publishJourney": "Publish Journey"
+    },
+    "stats": {
+      "users": "Active Users",
+      "journeys": "Total Journeys",
+      "deliveries": "Successful Deliveries",
+      "satisfaction": "User Satisfaction"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "step1": {
+        "title": "Publish Your Need",
+        "description": "Post what you need to ship, where from, where to, and how much you're willing to pay."
+      },
+      "step2": {
+        "title": "Connect with Travelers",
+        "description": "Our secure platform matches you with travelers who have space in their luggage."
+      },
+      "step3": {
+        "title": "Pay Securely and Track",
+        "description": "Make secure payments, track your items, and pay only upon successful delivery."
+      }
+    },
+    "featuredJourneys": {
+      "title": "Featured Journeys",
+      "availableWeight": "Available Weight",
+      "viewAll": "View All Journeys"
+    },
+    "testimonials": {
+      "title": "What Our Users Say"
+    },
+    "cta": {
+      "title": "Ready to Get Started?",
+      "description": "Join thousands of users who are already saving money and making connections globally.",
+      "register": "Register Now",
+      "learnMore": "Learn More"
+    }
+  },
+  "user": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phoneNumber": "Phone Number",
+    "address": "Address",
+    "updateProfile": "Update Profile",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "profileUpdated": "Profile updated successfully"
+  },
+  "demand": {
+    "myDemands": "My Demands",
+    "createDemand": "Create Demand",
+    "editDemand": "Edit Demand",
+    "demandDetails": "Demand Details",
+    "title": "Title",
+    "description": "Description",
+    "itemType": "Item Type",
+    "weight": "Weight (kg)",
+    "fromCountry": "From Country",
+    "fromCity": "From City",
+    "toCountry": "To Country",
+    "toCity": "To City",
+    "reward": "Reward",
+    "deadline": "Deadline",
+    "demandCreated": "Demand created successfully",
+    "demandUpdated": "Demand updated successfully",
+    "demandDeleted": "Demand deleted successfully"
+  },
+  "journey": {
+    "myJourneys": "My Journeys",
+    "createJourney": "Create Journey",
+    "editJourney": "Edit Journey",
+    "journeyDetails": "Journey Details",
+    "fromCountry": "From Country",
+    "fromCity": "From City",
+    "toCountry": "To Country",
+    "toCity": "To City",
+    "departureDate": "Departure Date",
+    "arrivalDate": "Arrival Date",
+    "availableWeight": "Available Weight (kg)",
+    "preferredItemTypes": "Preferred Item Types",
+    "notes": "Notes",
+    "journeyCreated": "Journey created successfully",
+    "journeyUpdated": "Journey updated successfully",
+    "journeyDeleted": "Journey deleted successfully"
+  },
+  "matching": {
+    "matchingResult": "Matching Result",
+    "matchingScore": "Matching Score",
+    "viewMatches": "View Matches",
+    "noDemands": "No matching demands found",
+    "noJourneys": "No matching journeys found",
+    "createOrder": "Create Order"
+  },
+  "order": {
+    "myOrders": "My Orders",
+    "orderDetails": "Order Details",
+    "orderId": "Order ID",
+    "orderStatus": "Order Status",
+    "paymentStatus": "Payment Status",
+    "itemDescription": "Item Description",
+    "weight": "Weight (kg)",
+    "itemValue": "Item Value",
+    "serviceFee": "Service Fee",
+    "rewardAmount": "Reward Amount",
+    "totalAmount": "Total Amount",
+    "estimatedDeliveryDate": "Estimated Delivery Date",
+    "actualDeliveryDate": "Actual Delivery Date",
+    "buyer": "Buyer",
+    "carrier": "Carrier",
+    "orderCreated": "Order created successfully",
+    "orderUpdated": "Order updated successfully",
+    "orderCancelled": "Order cancelled successfully",
+    "confirmDelivery": "Confirm Delivery",
+    "payNow": "Pay Now"
+  },
+  "payment": {
+    "paymentMethod": "Payment Method",
+    "cardNumber": "Card Number",
+    "expiryDate": "Expiry Date",
+    "cvv": "CVV",
+    "nameOnCard": "Name on Card",
+    "billingAddress": "Billing Address",
+    "paymentSuccessful": "Payment successful",
+    "paymentFailed": "Payment failed"
+  },
+  "messaging": {
+    "inbox": "Inbox",
+    "sentMessages": "Sent Messages",
+    "newMessage": "New Message",
+    "to": "To",
+    "subject": "Subject",
+    "message": "Message",
+    "send": "Send",
+    "reply": "Reply",
+    "forward": "Forward",
+    "messageSent": "Message sent successfully"
+  },
+  "kyc": {
+    "verification": "Verification",
+    "uploadDocuments": "Upload Documents",
+    "idType": "ID Type",
+    "idNumber": "ID Number",
+    "frontSide": "Front Side",
+    "backSide": "Back Side",
+    "selfie": "Selfie",
+    "uploadHere": "Upload Here",
+    "verificationSubmitted": "Verification submitted successfully",
+    "verificationApproved": "Verification approved",
+    "verificationRejected": "Verification rejected"
+  },
+  "review": {
+    "writeReview": "Write Review",
+    "rating": "Rating",
+    "reliability": "Reliability",
+    "communication": "Communication",
+    "comment": "Comment",
+    "submitReview": "Submit Review",
+    "reviewSubmitted": "Review submitted successfully",
+    "userReviews": "User Reviews"
+  },
+  "notification": {
+    "notifications": "Notifications",
+    "markAllAsRead": "Mark All as Read",
+    "clearAll": "Clear All",
+    "noNotifications": "No notifications"
+  },
+  "search": {
+    "searchResults": "Search Results",
+    "noResults": "No results found",
+    "advancedSearch": "Advanced Search",
+    "applyFilters": "Apply Filters",
+    "clearFilters": "Clear Filters"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Please enter a valid email address",
+    "passwordLength": "Password must be at least 8 characters",
+    "passwordMismatch": "The two passwords do not match"
+  },
+  "profile": {
+    "personalInfo": "Personal Information",
+    "security": "Security",
+    "changePassword": "Change Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phoneNumber": "Phone Number",
+    "username": "Username",
+    "email": "Email",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "updatePassword": "Update Password",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Failed to update profile",
+    "passwordUpdateSuccess": "Password updated successfully",
+    "passwordUpdateError": "Failed to update password"
+  },
+  "nav": {
+    "home": "Home",
+    "demands": "Demands",
+    "journeys": "Journeys",
+    "orders": "Orders",
+    "profile": "Profile",
+    "wallet": "Wallet",
+    "notifications": "Notifications",
+    "settings": "Settings"
+  }
+} 

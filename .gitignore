@@ -1,0 +1,122 @@
+# Node.js / React / Frontend
+frontend/web/node_modules/
+frontend/web/build/
+frontend/web/coverage/
+frontend/web/.env
+frontend/web/.env.local
+frontend/web/.env.development.local
+frontend/web/.env.test.local
+frontend/web/.env.production.local
+frontend/web/npm-debug.log*
+frontend/web/yarn-debug.log*
+frontend/web/yarn-error.log*
+frontend/web/.DS_Store
+frontend/web/.vscode/
+
+# Mobile app (if exists)
+frontend/mobile/node_modules/
+frontend/mobile/build/
+frontend/mobile/.gradle
+frontend/mobile/local.properties
+frontend/mobile/.idea/
+frontend/mobile/.DS_Store
+frontend/mobile/captures/
+frontend/mobile/*.apk
+frontend/mobile/*.aab
+
+# Java / Spring / Backend
+backend/**/target/
+backend/**/.mvn/wrapper/maven-wrapper.jar
+backend/**/build/
+backend/**/.gradle
+backend/**/out/
+backend/**/!**/src/main/**/out/
+backend/**/!**/src/test/**/out/
+backend/**/*.class
+backend/**/*.jar
+backend/**/*.war
+backend/**/*.ear
+backend/**/.settings/
+backend/**/.apt_generated
+backend/**/.classpath
+backend/**/.factorypath
+backend/**/.project
+backend/**/.springBeans
+backend/**/.DS_Store
+backend/**/*.log
+backend/**/*.log.*
+backend/**/application-local.properties
+backend/**/application-local.yml
+
+# Docker
+.env
+docker-volume/
+*.env.local
+
+# Database
+*.sql
+*.db
+*.sqlite
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE Files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.iml
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependency locks that might contain sensitive information
+yarn.lock
+package-lock.json
+
+# Build artifacts
+dist/
+build/
+temp/
+tmp/
+
+# Certificates and keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo 

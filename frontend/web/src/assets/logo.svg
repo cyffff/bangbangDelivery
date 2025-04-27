@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#1890ff" rx="20" ry="20" />
+  <text x="100" y="115" font-family="Arial" font-size="32" font-weight="bold" fill="white" text-anchor="middle">BangBang</text>
+  <path d="M50,60 L80,90 L50,120" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M120,60 L150,90 L120,120" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</svg> 

@@ -1,0 +1,153 @@
+.task-detail-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.task-detail-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.description-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.user-info-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.user-info-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.photos-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.item-photo {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: transform 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.item-photo:hover {
+  transform: scale(1.03);
+}
+
+.offer-list-item {
+  transition: background-color 0.3s;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.offer-list-item:hover {
+  background-color: #f0f7ff;
+}
+
+.offer-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.delivery-info-container {
+  padding: 12px;
+  background-color: #f6ffed;
+  border-radius: 8px;
+  border: 1px solid #b7eb8f;
+  margin: 16px 0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .photos-container {
+    justify-content: center;
+  }
+  
+  .item-photo {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .sticky-sidebar {
+    position: static !important;
+    margin-top: 16px;
+  }
+}
+
+.status-tag {
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.item-type-tag {
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+/* Timeline styles */
+.timeline-container .ant-timeline-item-tail {
+  border-left: 2px solid #e8e8e8;
+}
+
+.timeline-container .ant-timeline-item-head-blue {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.timeline-container .ant-timeline-item-head-green {
+  color: #52c41a;
+  border-color: #52c41a;
+}
+
+.timeline-container .ant-timeline-item-content {
+  margin-bottom: 20px;
+}
+
+/* Message form styles */
+.message-form textarea {
+  border-radius: 8px;
+}
+
+.message-form .ant-form-item-control-input-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Photo lightbox */
+.photo-lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.photo-lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+.photo-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+} 

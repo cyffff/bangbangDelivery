@@ -1,0 +1,108 @@
+/* Mobile-specific CSS optimizations */
+
+/* General mobile styles */
+@media (max-width: 768px) {
+  body {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+
+  /* Make forms more mobile-friendly */
+  input, select, textarea, button {
+    font-size: 16px !important; /* Prevents zoom on focus in iOS */
+    max-width: 100%;
+  }
+
+  /* Buttons optimized for touch */
+  button, 
+  .ant-btn {
+    min-height: 44px; /* Apple's recommended touch target size */
+    padding: 8px 16px !important;
+  }
+
+  /* Adjust navbar for mobile */
+  .ant-layout-header {
+    padding: 0 15px !important;
+  }
+
+  /* Adjust card and list layouts */
+  .ant-card,
+  .ant-list-item {
+    margin-bottom: 12px !important;
+  }
+
+  /* Make tables responsive */
+  .ant-table {
+    overflow-x: auto;
+    display: block;
+  }
+
+  /* Improve modal display */
+  .ant-modal {
+    max-width: 95% !important;
+    margin: 8px auto !important;
+  }
+
+  /* Adjust form layouts */
+  .ant-form-item-label {
+    padding-bottom: 4px !important;
+  }
+
+  /* Optimize drawer component */
+  .ant-drawer-content-wrapper {
+    width: 85% !important;
+  }
+}
+
+/* Small phones (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  h1, .ant-typography h1 {
+    font-size: 20px !important;
+  }
+  
+  h2, .ant-typography h2 {
+    font-size: 18px !important;
+  }
+  
+  .ant-form-item {
+    margin-bottom: 12px !important;
+  }
+  
+  .ant-drawer-content-wrapper {
+    width: 95% !important;
+  }
+}
+
+/* Fix Ant Design components for mobile */
+.ant-tabs-tab {
+  padding: 8px 12px !important;
+}
+
+.ant-pagination-item {
+  min-width: 28px !important;
+}
+
+/* Fix for fixed position headers */
+.fixed-header {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  width: 100%;
+}
+
+/* Ensure content doesn't overflow horizontally */
+.container, 
+.content-wrapper {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Add 'tap' state for better mobile feedback */
+.tap-highlight {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+/* Add touch feedback */
+.touch-feedback:active {
+  opacity: 0.7;
+} 

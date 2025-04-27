@@ -1,0 +1,1071 @@
+# 跨境物流平台技术架构文档
+
+## 一、系统架构概览
+
+### 1. 整体架构
+
+基于微服务架构，构建一个高可用、可扩展、安全的跨境物流交易平台，连接需要国际运输物品的用户与有行程的旅行者。
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                      客户端应用层                           │
+│  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌───────────┐  │
+│  │ 微信小程序 │  │ React Web │  │ iOS应用   │  │ Android  │  │
+│  └──────────┘  └──────────┘  └───────────┘  └───────────┘  │
+└────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────┐
+│                    全球CDN + 阿联酋节点                     │
+└────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────┐
+│                    API网关 (Spring Cloud Gateway)           │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │ 认证授权 │ 请求路由 │ 限流 │ HTTPS │ 监控 │ 负载均衡 │    │
+│  └────────────────────────────────────────────────────┘    │
+└────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────┐
+│                       微服务业务层 (Spring Boot)            │
+│  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌───────────┐  │
+│  │ 用户服务  │  │ 需求服务  │  │ 行程服务  │  │ 匹配服务  │  │
+│  └──────────┘  └──────────┘  └───────────┘  └───────────┘  │
+│                                                            │
+│  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌───────────┐  │
+│  │ 订单服务  │  │ 支付服务  │  │ 消息服务  │  │ 评价服务  │  │
+│  └──────────┘  └──────────┘  └───────────┘  └───────────┘  │
+│                                                            │
+│  ┌──────────┐  ┌──────────┐  ┌───────────┐                 │
+│  │ KYC服务  │  │ 搜索服务  │  │ 通知服务  │                 │
+│  └──────────┘  └──────────┘  └───────────┘                 │
+└────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────┐
+│                         数据持久化层                        │
+│  ┌──────────┐  ┌──────────┐  ┌───────────────────────┐     │
+│  │ MySQL    │  │ Redis    │  │ Elasticsearch        │     │
+│  └──────────┘  └──────────┘  └───────────────────────┘     │
+└────────────────────────────────────────────────────────────┘
+```
+
+### 2. 技术栈选择
+
+#### 后端技术栈
+- **核心框架**: Spring Boot + Spring Cloud
+- **微服务通信**: REST API、OpenFeign、Spring Cloud Stream
+- **数据库**: 
+  - 关系型: MySQL (用户、订单、支付等核心数据)
+  - 缓存: Redis (会话、临时数据、地理位置缓存)
+  - 搜索引擎: Elasticsearch (行程搜索、智能匹配推荐)
+- **消息队列**: RabbitMQ (异步任务、消息推送)
+- **服务注册与发现**: Eureka/Nacos
+- **配置中心**: Spring Cloud Config/Nacos
+- **WebSocket**: Spring WebSocket (即时通讯系统)
+
+#### 前端技术栈
+- **Web应用**: React + TypeScript + Redux
+- **UI组件库**: Ant Design
+- **HTTP客户端**: Axios
+- **WebSocket客户端**: Socket.io-client
+- **数据可视化**: Recharts/ECharts
+- **微信小程序**: 原生开发 (未来规划)
+
+#### DevOps工具链
+- **容器化**: Docker + Kubernetes
+- **CI/CD**: Jenkins/GitHub Actions
+- **监控告警**: Prometheus + Grafana
+- **日志管理**: ELK Stack
+- **全链路追踪**: Spring Cloud Sleuth + Zipkin
+
+## 二、核心服务模块详解
+
+### 3. 用户服务 (User Service)
+
+负责用户注册、登录、认证、个人信息管理和身份验证。
+
+#### 关键实体:
+- 用户(User)
+- 角色(Role)
+- 权限(Permission)
+- 认证(Authentication)
+- 身份验证(Verification)
+
+#### 核心功能:
+- 多渠道注册与登录(手机号、邮箱、社交媒体)
+- JWT授权认证
+- RBAC权限控制
+- KYC身份验证流程
+- 多因素身份认证
+
+#### API示例:
+```
+POST /api/v1/users/register
+POST /api/v1/users/login
+GET /api/v1/users/{id}/profile
+PUT /api/v1/users/{id}/profile
+POST /api/v1/users/verify/identity
+```
+
+### 4. 需求服务 (Demand Service)
+
+处理物品运输需求的发布、查询和管理。
+
+#### 关键实体:
+- 需求(Demand)
+- 物品类型(ItemType)
+- 地点(Location)
+
+#### 核心功能:
+- 需求发布与编辑
+- 需求搜索与筛选
+- 按时间、地点、物品类型分类
+- 需求状态管理
+- 热门需求推荐
+
+#### API示例:
+```
+POST /api/v1/demands
+GET /api/v1/demands
+GET /api/v1/demands/{id}
+PUT /api/v1/demands/{id}
+DELETE /api/v1/demands/{id}
+GET /api/v1/demands/popular
+```
+
+### 5. 行程服务 (Journey Service)
+
+处理旅行者行程信息的发布、查询和管理。
+
+#### 关键实体:
+- 行程(Journey)
+- 路线(Route)
+- 可携带重量(AvailableWeight)
+
+#### 核心功能:
+- 行程发布与编辑
+- 行程时间段、地点管理
+- 可携带物品类型与重量标记
+- 行程搜索与筛选
+- 行程状态管理
+
+#### API示例:
+```
+POST /api/v1/journeys
+GET /api/v1/journeys
+GET /api/v1/journeys/{id}
+PUT /api/v1/journeys/{id}
+DELETE /api/v1/journeys/{id}
+GET /api/v1/journeys/search
+```
+
+### 6. 匹配服务 (Matching Service)
+
+核心业务逻辑，智能匹配需求和行程，提供智能推荐。
+
+#### 关键特性:
+- 基于位置、时间、物品类型的多维度匹配
+- Elasticsearch驱动的高性能搜索
+- 基于用户历史行为的个性化推荐
+- 匹配评分与排序系统
+- 机器学习优化的匹配算法
+
+#### API示例:
+```
+GET /api/v1/matching/demands/{demandId}/journeys
+GET /api/v1/matching/journeys/{journeyId}/demands
+POST /api/v1/matching/suggest
+```
+
+#### 匹配算法核心逻辑:
+
+```java
+public List<JourneyMatchDto> findMatchesForDemand(String demandId) {
+    // 1. 获取需求详情
+    Demand demand = demandRepository.findById(demandId)
+        .orElseThrow(() -> new ResourceNotFoundException("需求不存在"));
+        
+    // 2. 构建Elasticsearch查询
+    SearchRequest searchRequest = new SearchRequest("journeys");
+    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+    
+    // 基础过滤条件
+    BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+        .must(QueryBuilders.termQuery("status", "active"))
+        .must(QueryBuilders.termQuery("departureCountry", demand.getOriginCountry()))
+        .must(QueryBuilders.termQuery("departureCity", demand.getOriginCity()))
+        .must(QueryBuilders.termQuery("destinationCountry", demand.getDestinationCountry()))
+        .must(QueryBuilders.termQuery("destinationCity", demand.getDestinationCity()))
+        .must(QueryBuilders.rangeQuery("departureDate").lte(demand.getDeadline()))
+        .must(QueryBuilders.rangeQuery("availableWeightKg").gte(demand.getWeightKg()));
+    
+    // 3. 计算排序函数分
+    FunctionScoreQueryBuilder.FilterFunctionBuilder[] functions = new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {
+        // 时间匹配度评分
+        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+            QueryBuilders.rangeQuery("departureDate").gte("now").lte(demand.getDeadline()),
+            ScoreFunctionBuilders.gaussDecayFunction("departureDate", demand.getDeadline(), "7d", "1d", 0.5)
+        ),
+        // 重量匹配度评分
+        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+            QueryBuilders.matchAllQuery(),
+            ScoreFunctionBuilders.weightFactorFunction(10)
+                .setWeight((float)(1.0 - demand.getWeightKg() / 30.0))
+        ),
+        // 用户信用评分
+        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+            QueryBuilders.rangeQuery("userCreditScore").gte(80),
+            ScoreFunctionBuilders.fieldValueFactorFunction("userCreditScore")
+                .factor(0.1f)
+                .modifier(FieldValueFactorFunction.Modifier.LOG1P)
+        )
+    };
+    
+    // 组合查询
+    FunctionScoreQueryBuilder functionScoreQuery = QueryBuilders.functionScoreQuery(boolQuery, functions)
+        .scoreMode(FunctionScoreQuery.ScoreMode.SUM)
+        .boostMode(CombineFunction.MULTIPLY);
+    
+    sourceBuilder.query(functionScoreQuery);
+    sourceBuilder.sort("_score", SortOrder.DESC);
+    searchRequest.source(sourceBuilder);
+    
+    // 4. 执行查询并处理结果
+    try {
+        SearchResponse searchResponse = elasticsearchClient.search(searchRequest, RequestOptions.DEFAULT);
+        return convertToJourneyMatchDtos(searchResponse, demand);
+    } catch (IOException e) {
+        log.error("Elasticsearch查询失败", e);
+        throw new ServiceException("匹配搜索失败");
+    }
+}
+```
+
+### 7. 订单服务 (Order Service)
+
+管理交易流程，包括下单、支付、确认等。
+
+#### 关键实体:
+- 订单(Order)
+- 支付(Payment)
+- 状态流转(Status)
+- 交易记录(Transaction)
+
+#### 核心功能:
+- 订单创建与管理
+- 订单状态流转
+- 订单跟踪与更新
+- 取消与退款处理
+- 订单历史查询
+
+#### API示例:
+```
+POST /api/v1/orders
+GET /api/v1/orders/{id}
+PUT /api/v1/orders/{id}/status
+POST /api/v1/orders/{id}/pay
+POST /api/v1/orders/{id}/confirm
+```
+
+### 8. 支付服务 (Payment Service)
+
+处理支付相关功能，对接多种支付渠道，确保资金安全。
+
+#### 关键特性:
+- 多支付渠道集成(支付宝、微信支付、PayBy等)
+- 资金托管与担保交易
+- 佣金计算与结算
+- 退款与纠纷处理
+- 交易加密与安全保障
+
+#### API示例:
+```
+POST /api/v1/payments/create
+GET /api/v1/payments/{id}
+POST /api/v1/payments/{id}/refund
+POST /api/v1/payments/webhook
+```
+
+#### 支付流程示例:
+
+```java
+@Transactional
+public PaymentResponse processPayment(String orderId, PaymentRequest request, String userId) {
+    // 1. 获取并验证订单
+    Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new ResourceNotFoundException("订单不存在"));
+    
+    if (!order.getBuyerId().equals(userId)) {
+        throw new UnauthorizedException("无权操作此订单");
+    }
+    
+    if (order.getPaymentStatus() != PaymentStatus.PENDING) {
+        throw new BusinessException("订单当前状态不允许支付");
+    }
+    
+    // 2. 创建支付记录
+    Payment payment = new Payment();
+    payment.setOrderId(orderId);
+    payment.setAmount(order.getTotalAmount());
+    payment.setType(request.getPaymentMethod());
+    payment.setStatus(PaymentStatus.PROCESSING);
+    payment.setCreatedAt(LocalDateTime.now());
+    payment = paymentRepository.save(payment);
+    
+    try {
+        // 3. 选择合适的支付渠道处理器
+        PaymentChannelProcessor processor = paymentProcessorFactory.getProcessor(request.getPaymentMethod());
+        
+        // 4. 调用支付渠道API
+        PaymentChannelResponse channelResponse = processor.createPayment(
+            PaymentChannelRequest.builder()
+                .amount(order.getTotalAmount())
+                .currency(order.getCurrency())
+                .description("订单" + orderId + "的支付")
+                .returnUrl(webProperties.getBaseUrl() + "/payment/return")
+                .notifyUrl(apiProperties.getBaseUrl() + "/api/v1/payments/webhook")
+                .orderId(orderId)
+                .build()
+        );
+        
+        // 5. 更新支付记录
+        payment.setChannelPaymentId(channelResponse.getPaymentId());
+        payment.setStatus(PaymentStatus.AWAITING_CONFIRMATION);
+        paymentRepository.save(payment);
+        
+        // 6. 更新订单状态
+        order.setPaymentStatus(PaymentStatus.PROCESSING);
+        orderRepository.save(order);
+        
+        // 7. 记录支付操作日志
+        auditLogService.logPaymentOperation(orderId, userId, "PAYMENT_INITIATED");
+        
+        // 8. 返回结果
+        return PaymentResponse.builder()
+            .paymentId(payment.getId())
+            .redirectUrl(channelResponse.getPaymentUrl())
+            .status(PaymentStatus.AWAITING_CONFIRMATION.name())
+            .build();
+    } catch (Exception e) {
+        // 支付处理失败处理
+        payment.setStatus(PaymentStatus.FAILED);
+        payment.setFailureReason(e.getMessage());
+        paymentRepository.save(payment);
+        
+        // 记录失败日志
+        auditLogService.logPaymentOperation(orderId, userId, "PAYMENT_FAILED", e.getMessage());
+        
+        throw new PaymentException("支付处理失败: " + e.getMessage());
+    }
+}
+```
+
+### 9. 消息服务 (Messaging Service)
+
+处理用户之间的即时通讯，确保端到端加密安全。
+
+#### 关键特性:
+- 一对一实时聊天
+- 聊天历史记录
+- 消息端到端加密
+- 系统通知集成
+- 未读消息管理
+- 消息搜索
+
+#### API示例:
+```
+WebSocket: ws://api/v1/messages
+GET /api/v1/messages/conversations
+GET /api/v1/messages/history/{conversationId}
+POST /api/v1/messages/read/{messageId}
+```
+
+### 10. KYC服务 (KYC Service)
+
+负责用户身份验证与KYC流程管理。
+
+#### 关键特性:
+- 人脸识别与活体检测
+- 证件OCR识别
+- 实名认证
+- 多层级KYC流程
+- 身份验证安全存储
+
+#### API示例:
+```
+POST /api/v1/kyc/upload-documents
+POST /api/v1/kyc/face-verification
+GET /api/v1/kyc/status
+```
+
+### 11. 评价服务 (Review Service)
+
+处理用户互评和信任机制建设。
+
+#### 关键实体:
+- 评价(Review)
+- 评分(Rating)
+- 用户信用(Credit)
+
+#### 核心功能:
+- 订单完成后的双向评价
+- 多维度评分系统
+- 用户信用分计算
+- 评价内容审核
+- 差评申诉与处理
+
+#### API示例:
+```
+POST /api/v1/reviews
+GET /api/v1/reviews/user/{userId}
+GET /api/v1/users/{userId}/credit
+```
+
+### 12. 通知服务 (Notification Service)
+
+处理各类系统通知和推送。
+
+#### 关键特性:
+- 多渠道通知(App推送、短信、邮件、微信)
+- 模板化通知内容
+- 通知首选项设置
+- 定时与触发式通知
+- 批量推送优化
+
+#### API示例:
+```
+POST /api/v1/notifications/send
+GET /api/v1/notifications/user/{userId}
+PUT /api/v1/notifications/preferences
+```
+
+## 三、数据库设计
+
+### 13. MySQL主要表结构
+
+#### 用户表(users)
+```sql
+CREATE TABLE users (
+  id VARCHAR(36) PRIMARY KEY,
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  phone_number VARCHAR(20),
+  password_hash VARCHAR(255) NOT NULL,
+  role_id INT NOT NULL,
+  credit_score DECIMAL(5,2) DEFAULT 100.0,
+  verification_status TINYINT DEFAULT 0,
+  profile_image_url VARCHAR(255),
+  last_login_time TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_email (email),
+  INDEX idx_phone (phone_number),
+  INDEX idx_credit (credit_score)
+);
+```
+
+#### 需求表(demands)
+```sql
+CREATE TABLE demands (
+  id VARCHAR(36) PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  item_type VARCHAR(50) NOT NULL,
+  weight_kg DECIMAL(6,2) NOT NULL,
+  estimated_value DECIMAL(10,2),
+  origin_country VARCHAR(50) NOT NULL,
+  origin_city VARCHAR(50) NOT NULL,
+  destination_country VARCHAR(50) NOT NULL,
+  destination_city VARCHAR(50) NOT NULL,
+  deadline DATE NOT NULL,
+  reward_amount DECIMAL(10,2),
+  status VARCHAR(20) DEFAULT 'active',
+  view_count INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  INDEX idx_status (status),
+  INDEX idx_location (origin_country, destination_country),
+  INDEX idx_deadline (deadline)
+);
+```
+
+#### 行程表(journeys)
+```sql
+CREATE TABLE journeys (
+  id VARCHAR(36) PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL,
+  departure_country VARCHAR(50) NOT NULL,
+  departure_city VARCHAR(50) NOT NULL,
+  destination_country VARCHAR(50) NOT NULL,
+  destination_city VARCHAR(50) NOT NULL,
+  departure_date DATE NOT NULL,
+  arrival_date DATE NOT NULL,
+  available_weight_kg DECIMAL(6,2) NOT NULL,
+  preferred_item_types TEXT,
+  notes TEXT,
+  status VARCHAR(20) DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  INDEX idx_status (status),
+  INDEX idx_dates (departure_date, arrival_date),
+  INDEX idx_location (departure_country, destination_country)
+);
+```
+
+#### 订单表(orders)
+```sql
+CREATE TABLE orders (
+  id VARCHAR(36) PRIMARY KEY,
+  demand_id VARCHAR(36) NOT NULL,
+  journey_id VARCHAR(36) NOT NULL,
+  buyer_id VARCHAR(36) NOT NULL,
+  carrier_id VARCHAR(36) NOT NULL,
+  item_description TEXT NOT NULL,
+  weight_kg DECIMAL(6,2) NOT NULL,
+  item_value DECIMAL(10,2) NOT NULL,
+  service_fee DECIMAL(10,2) NOT NULL,
+  reward_amount DECIMAL(10,2) NOT NULL,
+  total_amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) DEFAULT 'created',
+  payment_status VARCHAR(20) DEFAULT 'pending',
+  estimated_delivery_date DATE,
+  actual_delivery_date DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (demand_id) REFERENCES demands(id),
+  FOREIGN KEY (journey_id) REFERENCES journeys(id),
+  FOREIGN KEY (buyer_id) REFERENCES users(id),
+  FOREIGN KEY (carrier_id) REFERENCES users(id),
+  INDEX idx_status (status, payment_status),
+  INDEX idx_dates (created_at, estimated_delivery_date)
+);
+```
+
+#### 支付表(payments)
+```sql
+CREATE TABLE payments (
+  id VARCHAR(36) PRIMARY KEY,
+  order_id VARCHAR(36) NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  currency VARCHAR(3) DEFAULT 'CNY',
+  type VARCHAR(20) NOT NULL,
+  channel_payment_id VARCHAR(100),
+  status VARCHAR(20) NOT NULL,
+  failure_reason TEXT,
+  payer_id VARCHAR(36) NOT NULL,
+  payee_id VARCHAR(36) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id),
+  FOREIGN KEY (payer_id) REFERENCES users(id),
+  FOREIGN KEY (payee_id) REFERENCES users(id),
+  INDEX idx_status (status),
+  INDEX idx_order (order_id)
+);
+```
+
+#### 评价表(reviews)
+```sql
+CREATE TABLE reviews (
+  id VARCHAR(36) PRIMARY KEY,
+  order_id VARCHAR(36) NOT NULL,
+  reviewer_id VARCHAR(36) NOT NULL,
+  reviewee_id VARCHAR(36) NOT NULL,
+  rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  reliability_score TINYINT CHECK (reliability_score BETWEEN 1 AND 5),
+  communication_score TINYINT CHECK (communication_score BETWEEN 1 AND 5),
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id),
+  FOREIGN KEY (reviewer_id) REFERENCES users(id),
+  FOREIGN KEY (reviewee_id) REFERENCES users(id),
+  INDEX idx_reviewee (reviewee_id),
+  INDEX idx_rating (rating)
+);
+```
+
+#### KYC表(kyc_verifications)
+```sql
+CREATE TABLE kyc_verifications (
+  id VARCHAR(36) PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL UNIQUE,
+  id_type VARCHAR(20) NOT NULL,
+  id_number VARCHAR(50) NOT NULL,
+  id_image_front VARCHAR(255) NOT NULL,
+  id_image_back VARCHAR(255) NOT NULL,
+  face_image VARCHAR(255) NOT NULL,
+  verification_status VARCHAR(20) DEFAULT 'pending',
+  rejection_reason TEXT,
+  verified_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  INDEX idx_status (verification_status)
+);
+```
+
+### 14. Redis数据结构设计
+
+#### 用户会话管理
+```
+// 用户令牌
+KEY: user:token:{token}
+VALUE: {userId}
+EXPIRE: 7天
+
+// 用户在线状态
+KEY: user:online:{userId}
+VALUE: {last_active_timestamp}
+EXPIRE: 5分钟
+
+// 用户权限缓存
+KEY: user:permissions:{userId}
+VALUE: SET[{permission1}, {permission2}, ...]
+EXPIRE: 1小时
+```
+
+#### 行程搜索缓存
+```
+// 热门行程缓存
+KEY: popular:journeys
+VALUE: ZSET[{journeyId1} -> {score1}, {journeyId2} -> {score2}, ...]
+EXPIRE: 1小时
+
+// 地点行程索引
+KEY: journeys:location:{originCountry}:{destCountry}
+VALUE: ZSET[{journeyId1} -> {departureTimestamp}, ...]
+EXPIRE: 12小时
+```
+
+#### 匹配结果缓存
+```
+// 需求匹配结果
+KEY: matches:demand:{demandId}
+VALUE: ZSET[{journeyId1} -> {matchScore1}, {journeyId2} -> {matchScore2}, ...]
+EXPIRE: 30分钟
+
+// 用户推荐缓存
+KEY: recommend:user:{userId}:journeys
+VALUE: LIST[{journeyId1}, {journeyId2}, ...]
+EXPIRE: 1小时
+```
+
+#### 限流控制
+```
+// API请求限流
+KEY: ratelimit:{ip}:{endpoint}
+VALUE: 计数器
+EXPIRE: 1分钟
+
+// 失败登录尝试
+KEY: login:fails:{username}
+VALUE: 计数器
+EXPIRE: 30分钟
+```
+
+### 15. Elasticsearch索引设计
+
+#### 行程索引
+```json
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1,
+    "analysis": {
+      "analyzer": {
+        "text_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": { "type": "keyword" },
+      "userId": { "type": "keyword" },
+      "departureCountry": { "type": "keyword" },
+      "departureCity": { 
+        "type": "text",
+        "analyzer": "text_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword" }
+        }
+      },
+      "destinationCountry": { "type": "keyword" },
+      "destinationCity": {
+        "type": "text",
+        "analyzer": "text_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword" }
+        }
+      },
+      "departureDate": { "type": "date" },
+      "arrivalDate": { "type": "date" },
+      "availableWeightKg": { "type": "float" },
+      "preferredItemTypes": { "type": "keyword" },
+      "notes": { "type": "text", "analyzer": "text_analyzer" },
+      "status": { "type": "keyword" },
+      "userCreditScore": { "type": "float" },
+      "location": { "type": "geo_point" },
+      "createdAt": { "type": "date" }
+    }
+  }
+}
+```
+
+#### 需求索引
+```json
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1,
+    "analysis": {
+      "analyzer": {
+        "text_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": { "type": "keyword" },
+      "userId": { "type": "keyword" },
+      "title": { "type": "text", "analyzer": "text_analyzer" },
+      "description": { "type": "text", "analyzer": "text_analyzer" },
+      "itemType": { "type": "keyword" },
+      "weightKg": { "type": "float" },
+      "estimatedValue": { "type": "float" },
+      "originCountry": { "type": "keyword" },
+      "originCity": {
+        "type": "text",
+        "analyzer": "text_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword" }
+        }
+      },
+      "destinationCountry": { "type": "keyword" },
+      "destinationCity": {
+        "type": "text",
+        "analyzer": "text_analyzer",
+        "fields": {
+          "keyword": { "type": "keyword" }
+        }
+      },
+      "deadline": { "type": "date" },
+      "rewardAmount": { "type": "float" },
+      "status": { "type": "keyword" },
+      "userCreditScore": { "type": "float" },
+      "viewCount": { "type": "integer" },
+      "createdAt": { "type": "date" }
+    }
+  }
+}
+```
+
+## 四、系统安全设计
+
+### 16. 安全架构
+
+#### 网络安全
+- **全链路HTTPS**：所有API通信采用TLS 1.3加密
+- **WAF防护**：部署Web应用防火墙，防御常见Web攻击
+- **DDoS防护**：利用全球CDN网络提供DDoS攻击缓解
+- **IP白名单**：后台管理系统采用IP白名单限制访问
+- **API网关安全控制**：请求频率限制、异常检测、请求验证
+
+#### 认证与授权
+- **多因素认证**：敏感操作启用多因素验证
+- **JWT令牌管理**：短期有效令牌 + 刷新令牌机制
+- **权限细粒度控制**：基于RBAC模型的访问控制
+- **OAuth2.0集成**：支持第三方登录系统集成
+- **令牌自动轮换**：定期轮换机制增强安全性
+
+#### 数据安全
+- **敏感数据加密**：使用AES-256算法加密存储敏感信息
+- **支付信息安全**：遵循PCI DSS标准处理支付信息
+- **数据脱敏**：API响应中自动脱敏敏感字段
+- **数据库加密**：敏感字段列级加密
+- **备份加密**：数据备份文件强制加密
+
+#### 端到端加密通信
+- **聊天消息加密**：采用Signal协议实现端到端加密
+- **密钥管理**：安全的密钥交换和存储机制
+- **前向保密**：支持完美前向保密，确保历史消息安全
+- **消息认证**：消息完整性验证机制
+
+### 17. KYC与反欺诈系统
+
+#### KYC核心流程
+1. **基础信息验证**：邮箱、手机号验证
+2. **证件验证**：身份证/护照OCR识别与验证
+3. **人脸识别**：与证件照比对 + 活体检测
+4. **交叉验证**：多维度信息交叉验证
+5. **定期重新验证**：周期性用户身份再确认
+
+#### 反欺诈机制
+- **行为风险分析**：用户行为模式异常检测
+- **设备指纹**：设备特征信息采集与分析
+- **交易风险评分**：实时交易风险评估系统
+- **黑名单系统**：全局欺诈用户黑名单
+- **人工审核**：高风险交易人工审核机制
+
+### 18. 隐私合规
+
+#### 数据隐私保护
+- **数据最小化**：仅收集必要的个人数据
+- **明确的隐私政策**：透明的数据使用说明
+- **用户授权机制**：精细化的数据使用授权
+- **数据自动清理**：不再需要的数据自动删除机制
+- **数据访问审计**：敏感数据访问全记录审计
+
+#### 国际合规
+- **GDPR合规**：满足欧盟通用数据保护条例要求
+- **CCPA合规**：满足加州消费者隐私法案要求
+- **中东地区数据法规**：符合阿联酋/沙特等国数据保护法规
+- **跨境数据传输**：合规的跨境数据流动方案
+- **Cookie合规**：符合全球Cookie使用规范
+
+## 五、系统集成与国际化
+
+### 19. 第三方系统集成
+
+#### 支付集成
+- **支付宝**：跨境支付通道集成
+- **微信支付**：国内支付渠道
+- **PayBy**：阿联酋本地支付通道
+- **Stripe**：国际信用卡支付
+- **区块链支付**：加密货币支付选项(未来规划)
+
+#### 物流追踪集成
+- **航空公司API**：航班状态实时查询
+- **物流单号验证**：第三方物流单号验证服务
+- **位置共享系统**：基于用户授权的精确位置共享
+
+#### 社交媒体集成
+- **微信生态**：小程序、微信登录、分享
+- **WhatsApp**：中东地区消息通知渠道
+- **Facebook/Instagram**：社交媒体分享功能
+
+#### 内容服务集成
+- **内容审核API**：第三方内容审核服务
+- **翻译服务**：Google/百度翻译API
+- **地图服务**：高德/Google地图服务集成
+
+### 20. 国际化与本地化
+
+#### 多语言支持
+- **核心语言**：中文、英文、阿拉伯语
+- **语言检测**：自动语言检测与切换
+- **RTL支持**：阿拉伯语右到左布局支持
+- **动态语言包**：服务端控制语言资源包
+- **内容翻译**：用户生成内容跨语言翻译
+
+#### 地区适配
+- **货币自动转换**：多币种支持与实时汇率
+- **时区智能处理**：用户本地时区显示
+- **支付方式适配**：不同地区默认支付方式
+- **文化敏感内容**：文化差异的智能处理
+- **地区法规适配**：符合不同地区法律法规
+
+#### 跨国基础设施
+- **全球CDN**：内容分发网络全球覆盖
+- **多区域部署**：中国、中东、东南亚多区域部署
+- **智能路由**：就近接入与路由优化
+- **跨区域数据同步**：高效的数据同步机制
+- **阿联酋专属节点**：阿联酋本地云服务部署
+
+## 六、可扩展性与高可用设计
+
+### 21. 服务弹性伸缩
+
+#### 自动扩展机制
+- **容器编排**：Kubernetes自动扩展策略
+- **负载监控触发**：基于CPU/内存/请求量的弹性伸缩
+- **定时扩展**：针对可预测高峰的定时扩容
+- **多维度伸缩**：横向和纵向扩展结合
+
+#### 流量调度
+- **全局负载均衡**：跨区域负载调度
+- **服务熔断**：异常服务熔断保护
+- **限流保护**：重要API流量限制策略
+- **服务降级**：高负载下非核心服务自动降级
+
+### 22. 高可用架构
+
+#### 多区域部署
+- **活跃-活跃模式**：多区域同时提供服务
+- **区域故障隔离**：区域故障不影响整体可用性
+- **数据复制策略**：跨区域数据复制机制
+- **全球DNS负载均衡**：智能DNS解析路由
+
+#### 数据库高可用
+- **主从架构**：MySQL主从复制
+- **读写分离**：读操作负载分散
+- **自动故障转移**：主库故障自动切换
+- **分库分表策略**：大表水平拆分方案
+
+#### 服务冗余
+- **无状态服务设计**：便于横向扩展
+- **多实例部署**：关键服务多实例冗余
+- **会话共享机制**：分布式会话管理
+- **缓存高可用**：Redis集群与哨兵模式
+
+### 23. 灾备与恢复
+
+#### 数据备份策略
+- **自动备份**：定时全量+增量备份
+- **跨区域备份**：备份数据异地存储
+- **定期恢复测试**：备份数据恢复演练
+- **数据版本控制**：多版本备份保留
+
+#### 故障恢复机制
+- **RTO/RPO目标**：恢复时间目标 < 15分钟，恢复点目标 < 5分钟
+- **故障自动检测**：监控告警自动化
+- **恢复流程自动化**：自动化灾备切换流程
+- **灾备演练**：定期灾备演练机制
+
+## 七、监控与运维
+
+### 24. 监控告警系统
+
+#### 核心监控指标
+- **业务指标**：订单量、支付成功率、用户活跃度
+- **性能指标**：响应时间、QPS、错误率
+- **系统指标**：CPU、内存、磁盘、网络
+- **安全指标**：异常访问、权限变更、敏感操作
+
+#### 告警机制
+- **多级别告警**：P0/P1/P2/P3告警分级
+- **智能阈值**：自动学习的动态阈值
+- **告警聚合**：相似告警智能合并
+- **多渠道通知**：邮件、短信、电话、微信
+- **值班轮换**：告警值班轮换制度
+
+### 25. 日志管理
+
+#### 日志采集与存储
+- **实时采集**：应用、系统、安全日志统一采集
+- **结构化处理**：日志解析与结构化存储
+- **分布式存储**：高性能日志存储架构
+- **日志轮转**：自动轮转与归档策略
+- **检索优化**：高效日志检索能力
+
+#### 审计日志
+- **操作审计**：管理操作全记录审计
+- **访问审计**：敏感数据访问审计
+- **变更审计**：系统配置变更审计
+- **不可篡改**：审计日志防篡改机制
+- **合规存储**：满足监管保存要求
+
+### 26. DevOps流程
+
+#### CI/CD流程
+- **代码质量**：强制代码审查、质量门禁
+- **自动化测试**：单元测试、集成测试、UI测试
+- **蓝绿部署**：无损发布切换
+- **灰度发布**：小比例流量测试
+- **一键回滚**：快速回滚机制
+
+#### 变更管理
+- **变更计划**：规范的变更申请流程
+- **影响评估**：变更风险与影响分析
+- **变更窗口**：固定变更时间窗口
+- **变更审批**：多级变更审批机制
+- **变更通知**：利益相关方变更通知
+
+## 八、项目实施规划
+
+### 27. 开发管理
+
+#### 开发流程
+- **敏捷开发**：两周一个迭代周期
+- **用户故事地图**：功能规划与优先级排序
+- **测试驱动开发**：核心功能TDD方式开发
+- **持续集成**：每日构建与测试
+- **定期复盘**：每周技术复盘会议
+
+#### 开发规范
+- **编码规范**：严格的编码风格规范
+- **API设计规范**：RESTful API设计标准
+- **数据库规范**：数据库命名与设计规范
+- **微服务规范**：服务拆分与通信规范
+- **文档规范**：代码注释与文档要求
+
+### 28. 测试策略
+
+#### 测试类型
+- **单元测试**：代码级别测试，覆盖率目标80%+
+- **集成测试**：服务间交互测试
+- **API测试**：RESTful API自动化测试
+- **UI测试**：前端界面自动化测试
+- **性能测试**：负载、压力、耐久性测试
+- **安全测试**：渗透测试、弱点扫描
+
+#### 测试环境
+- **开发环境**：开发人员本地环境
+- **测试环境**：自动化测试专用环境
+- **预发环境**：与生产完全一致的预发布环境
+- **生产环境**：正式用户访问环境
+
+### 29. 上线与运维规划
+
+#### 分阶段上线
+- **内测阶段**：小规模内部用户测试
+- **公测阶段**：邀请制外部用户测试
+- **区域灰度**：选定区域先行上线
+- **全量发布**：全面开放服务
+
+#### 运维支持
+- **7x24小时运维**：全天候技术支持
+- **故障响应SLA**：不同级别故障响应时间承诺
+- **升级维护窗口**：固定系统维护时间窗口
+- **容量规划**：定期容量评估与扩展规划
+
+## 九、未来技术规划
+
+### 30. 技术演进路线
+
+#### 近期规划 (1年内)
+- **微服务全面落地**：完成所有核心服务微服务化
+- **多端体验优化**：Web与小程序体验提升
+- **支付渠道拓展**：新增2-3个本地支付渠道
+- **性能优化**：关键接口响应时间优化50%
+
+#### 中期规划 (1-2年)
+- **智能推荐升级**：基于机器学习的匹配算法
+- **全球化扩展**：新增3-5个服务区域
+- **区块链集成**：探索区块链支付与信任机制
+- **实时翻译**：跨语言实时聊天翻译功能
+
+#### 长期规划 (3-5年)
+- **AI辅助决策**：人工智能辅助风控与运营
+- **IoT集成**：智能物流跟踪设备集成
+- **AR体验**：增强现实物品展示与交接
+- **Open API**：开放平台生态建设
+
+### 31. 技术挑战与应对
+
+#### 主要挑战
+1. **跨文化用户体验**：中国与中东用户习惯差异大
+2. **跨境支付复杂性**：多币种、多渠道支付整合难度高
+3. **国际化合规要求**：不同国家监管要求各异
+4. **跨区域网络质量**：中国-中东网络连接质量不稳定
+5. **信任机制构建**：陌生人社交网络信任基础薄弱
+
+#### 应对策略
+1. **本地化团队**：核心市场设立本地产品团队
+2. **合规优先原则**：产品设计以合规为第一优先级
+3. **网络优化**：专线与CDN结合的全球加速方案
+4. **多层次信任体系**：身份验证+社交验证+行为信用多维度结合
+5. **技术储备**：持续关注前沿技术，定期创新尝试

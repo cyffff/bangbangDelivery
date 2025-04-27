@@ -1,0 +1,117 @@
+.wallet-page {
+  margin-bottom: 40px;
+}
+
+.balance-card {
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.balance-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.action-card {
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.action-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.balance-details {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 4px 0;
+}
+
+.transaction-filter-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+/* Payment Method Card styles */
+.payment-method-card {
+  transition: all 0.3s;
+  border-radius: 8px;
+}
+
+.payment-method-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.payment-method-card .ant-card-head {
+  background-color: #f9f9f9;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.payment-method-info {
+  padding: 8px 0;
+}
+
+.payment-method-info p {
+  margin-bottom: 8px;
+}
+
+/* Transaction details modal */
+.transaction-details {
+  padding: 8px;
+}
+
+.transaction-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .wallet-page {
+    padding: 0 8px;
+  }
+  
+  .balance-card, 
+  .action-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* Table row hover effect */
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: #f0f7ff !important;
+}
+
+/* Deposit type styles */
+.transaction-deposit {
+  color: #52c41a;
+}
+
+/* Withdrawal type styles */
+.transaction-withdrawal {
+  color: #fa8c16;
+}
+
+/* Payment type styles */
+.transaction-payment {
+  color: #f5222d;
+}
+
+/* Earning type styles */
+.transaction-earning {
+  color: #1890ff;
+}
+
+/* Status tag styles */
+.status-tag {
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* Balance statistic styles */
+.balance-statistic .ant-statistic-content {
+  font-weight: 600;
+} 

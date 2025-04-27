@@ -1,0 +1,111 @@
+.journey-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+.search-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  transition: all 0.3s;
+}
+
+.search-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.journey-card {
+  transition: all 0.3s;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.journey-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+
+.journey-details {
+  width: 100%;
+}
+
+.journey-route {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.journey-route .arrow {
+  margin: 0 8px;
+  color: #1890ff;
+}
+
+.journey-dates {
+  margin-bottom: 8px;
+}
+
+.journey-traveler {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.journey-traveler .name {
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.traveler-rating {
+  margin-left: 12px;
+  font-size: 12px;
+}
+
+.journey-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.journey-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.cta-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  text-align: center;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.empty-result {
+  padding: 48px 0;
+  text-align: center;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .journey-page {
+    padding: 0 12px 32px;
+  }
+
+  .journey-details {
+    margin-bottom: 16px;
+  }
+
+  .journey-actions {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+  }
+  
+  .journey-actions button {
+    width: 48%;
+  }
+} 

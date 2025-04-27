@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { message } from 'antd';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8088/api/v1';
 
 export interface LoginRequest {
   username: string;
@@ -39,11 +39,14 @@ export interface AuthResponse {
   user: UserProfile;
 }
 
+// Create an instance of axios with default configuration
 const apiClient = axios.create({
   baseURL: `${API_URL}/auth`,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add a longer timeout for potentially slow responses
+  timeout: 10000
 });
 
 // Add interceptor to include auth token in requests
@@ -56,6 +59,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -65,6 +69,10 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    // Log the error for debugging
+    console.error('API Error:', error.response?.status, error.response?.data);
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
@@ -97,7 +105,17 @@ apiClient.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    return Promise.reject(error);
+    
+    // Extract user-friendly error message if available
+    const errorMessage = error.response?.data?.message 
+      || error.response?.data?.error 
+      || error.message 
+      || 'An unexpected error occurred';
+      
+    return Promise.reject({
+      ...error,
+      userMessage: errorMessage
+    });
   }
 );
 
@@ -106,8 +124,10 @@ export const authApi = {
    * Login with username/email and password
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
+    console.log('Login attempt:', credentials.username);
     try {
       const response = await apiClient.post('/login', credentials);
+      console.log('Login success:', response.data);
       
       // Store tokens based on remember option
       if (credentials.remember) {
@@ -120,7 +140,8 @@ export const authApi = {
       
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Login failed');
+      console.error('Login error:', error);
+      throw new Error(error.userMessage || 'Login failed. Please check your credentials.');
     }
   },
   
@@ -128,8 +149,10 @@ export const authApi = {
    * Register a new user
    */
   async register(userData: RegisterRequest): Promise<AuthResponse> {
+    console.log('Registration attempt for:', userData.username);
     try {
       const response = await apiClient.post('/register', userData);
+      console.log('Registration success');
       
       // Store tokens
       localStorage.setItem('token', response.data.accessToken);
@@ -137,7 +160,8 @@ export const authApi = {
       
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Registration failed');
+      console.error('Registration error:', error);
+      throw new Error(error.userMessage || 'Registration failed. Please try again.');
     }
   },
   
@@ -146,7 +170,10 @@ export const authApi = {
    */
   async logout(): Promise<void> {
     try {
-      await apiClient.post('/logout');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (token) {
+        await apiClient.post('/logout');
+      }
       
       // Clear stored tokens
       localStorage.removeItem('token');
@@ -162,7 +189,7 @@ export const authApi = {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('refreshToken');
       
-      throw new Error(error.response?.data?.message || 'Logout failed');
+      throw new Error(error.userMessage || 'Logout failed');
     }
   },
   
@@ -174,7 +201,7 @@ export const authApi = {
       const response = await apiClient.post('/refresh-token', { refreshToken });
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Token refresh failed');
+      throw new Error(error.userMessage || 'Token refresh failed');
     }
   },
   
@@ -186,7 +213,7 @@ export const authApi = {
       const response = await apiClient.get('/me');
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to get user profile');
+      throw new Error(error.userMessage || 'Failed to get user profile');
     }
   },
   

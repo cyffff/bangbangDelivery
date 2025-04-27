@@ -6,6 +6,8 @@ server:
 spring:
   application:
     name: auth-service
+  main:
+    allow-bean-definition-overriding: true
   datasource:
     url: jdbc:mysql://localhost:3306/bangbang_auth?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
     username: root

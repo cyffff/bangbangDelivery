@@ -1,0 +1,14 @@
+{
+  "name": "auth-service-mock",
+  "version": "1.0.0",
+  "description": "Mock auth service for BangBang Delivery",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5"
+  }
+} 

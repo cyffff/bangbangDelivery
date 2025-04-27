@@ -12,15 +12,18 @@ services:
       MYSQL_DATABASE: bangbang
       MYSQL_USER: bangbang
       MYSQL_PASSWORD: bangbang_password
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - bangbang-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
-      interval: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # Redis
   redis:
@@ -45,159 +48,56 @@ services:
     ports:
       - "8088:80"
     volumes:
-      - ./infrastructure/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - bangbang-network
     depends_on:
       - auth-service
       - user-service
       - order-service
-      - demand-service
-      - journey-service
-      - payment-service
-      - messaging-service
-      - notification-service
-      - search-service
 
   # Backend Services
   auth-service:
     container_name: bangbang_auth
     build:
-      context: ./backend
-      dockerfile: auth-service/Dockerfile
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=8081
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang
-      - SPRING_DATASOURCE_USERNAME=bangbang
-      - SPRING_DATASOURCE_PASSWORD=bangbang_password
-      - SPRING_REDIS_HOST=redis
+      - SPRING_MAIN_ALLOW-BEAN-DEFINITION-OVERRIDING=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang_auth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_INITIALIZATION-MODE=always
+      - SPRING_JPA_HIBERNATE_DDL-AUTO=update
+      - SPRING_JPA_DATABASE-PLATFORM=org.hibernate.dialect.MySQL8Dialect
+      - APP_JWT_SECRET=9a02115a835ee03d5fb83cd8a468ea33e4090aaaec87f53c9fa54512bbef4db8dc656c82a315fa0c785c08b0134716b81ddcd0153d2a7556f2e154912cf5675f
+      - APP_JWT_EXPIRATION=86400000
+      - APP_JWT_REFRESHEXPIRATION=604800000
+      - APP_SERVICES_USER-SERVICE_URL=http://user-service:8082
     networks:
       - bangbang-network
+    restart: on-failure
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
 
+  # For now, we'll use simple Dockerfiles for these services since we're focusing on auth
   user-service:
     container_name: bangbang_user
-    build:
-      context: ./backend
-      dockerfile: user-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8082
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang
-      - SPRING_DATASOURCE_USERNAME=bangbang
-      - SPRING_DATASOURCE_PASSWORD=bangbang_password
-      - SPRING_REDIS_HOST=redis
+    image: openjdk:11-jre-slim
+    command: sh -c "echo 'User Service Placeholder - Real service needs to be built manually' && tail -f /dev/null"
     networks:
       - bangbang-network
-    depends_on:
-      - mysql
-      - redis
 
   order-service:
     container_name: bangbang_order
-    build:
-      context: ./backend
-      dockerfile: order-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8083
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang
-      - SPRING_DATASOURCE_USERNAME=bangbang
-      - SPRING_DATASOURCE_PASSWORD=bangbang_password
-      - SPRING_REDIS_HOST=redis
-    networks:
-      - bangbang-network
-    depends_on:
-      - mysql
-      - redis
-
-  demand-service:
-    container_name: bangbang_demand
-    build:
-      context: ./backend
-      dockerfile: demand-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8084
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang
-      - SPRING_DATASOURCE_USERNAME=bangbang
-      - SPRING_DATASOURCE_PASSWORD=bangbang_password
-    networks:
-      - bangbang-network
-    depends_on:
-      - mysql
-
-  journey-service:
-    container_name: bangbang_journey
-    build:
-      context: ./backend
-      dockerfile: journey-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8085
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang
-      - SPRING_DATASOURCE_USERNAME=bangbang
-      - SPRING_DATASOURCE_PASSWORD=bangbang_password
-    networks:
-      - bangbang-network
-    depends_on:
-      - mysql
-
-  payment-service:
-    container_name: bangbang_payment
-    build:
-      context: ./backend
-      dockerfile: payment-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8086
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang
-      - SPRING_DATASOURCE_USERNAME=bangbang
-      - SPRING_DATASOURCE_PASSWORD=bangbang_password
-    networks:
-      - bangbang-network
-    depends_on:
-      - mysql
-
-  messaging-service:
-    container_name: bangbang_messaging
-    build:
-      context: ./backend
-      dockerfile: messaging-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8087
-      - SPRING_REDIS_HOST=redis
-    networks:
-      - bangbang-network
-    depends_on:
-      - redis
-
-  notification-service:
-    container_name: bangbang_notification
-    build:
-      context: ./backend
-      dockerfile: notification-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8089
-      - SPRING_REDIS_HOST=redis
-    networks:
-      - bangbang-network
-    depends_on:
-      - redis
-
-  search-service:
-    container_name: bangbang_search
-    build:
-      context: ./backend
-      dockerfile: search-service/Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8090
+    image: openjdk:11-jre-slim
+    command: sh -c "echo 'Order Service Placeholder - Real service needs to be built manually' && tail -f /dev/null"
     networks:
       - bangbang-network
 
@@ -216,8 +116,6 @@ services:
       - DISABLE_ESLINT_PLUGIN=true
       - TSC_COMPILE_ON_ERROR=true
       - ESLINT_NO_DEV_ERRORS=true
-    volumes:
-      - ./frontend/web/patches:/app/patches
     networks:
       - bangbang-network
     depends_on:

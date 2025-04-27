@@ -1,41 +1,51 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Divider, message, Select } from 'antd';
+import { Form, Input, Button, Card, Typography, Divider, message, Select, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MobileOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { login } from '../store/slices/authSlice';
+import { register } from '../store/slices/authSlice';
+import { RegisterRequest } from '../api/authApi';
+import { AppDispatch } from '../store';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onFinish = async (values: any) => {
+    setError(null);
     try {
       setLoading(true);
-      // This would be a real API call in a production app
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Simulate successful registration
-      const userData = {
-        id: '1',
+      
+      // Prepare registration request
+      const registrationRequest: RegisterRequest = {
         username: values.username,
-        phoneNumber: values.phoneNumber,
         email: values.email,
+        password: values.password,
+        firstName: values.firstName || values.username.split(' ')[0],
+        lastName: values.lastName || values.username.split(' ').slice(1).join(' ') || values.username,
+        phoneNumber: values.countryCode + values.phoneNumber
       };
       
-      dispatch(login({
-        user: userData,
-        token: 'mock-jwt-token'
-      }));
+      // Dispatch register action
+      const resultAction = await dispatch(register(registrationRequest));
       
-      message.success('Registration successful');
-      navigate('/');
-    } catch (error) {
+      if (register.fulfilled.match(resultAction)) {
+        message.success('Registration successful');
+        navigate('/');
+      } else if (register.rejected.match(resultAction)) {
+        const errorMsg = resultAction.payload || 'Registration failed';
+        setError(errorMsg as string);
+        message.error('Registration failed. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      setError(error.message || 'Registration failed. Please try again.');
       message.error('Registration failed. Please try again.');
     } finally {
       setLoading(false);
@@ -49,6 +59,18 @@ const RegisterPage: React.FC = () => {
           <Title level={2} style={{ marginBottom: 8 }}>Create an Account</Title>
           <Text type="secondary">Join BangBang Delivery to ship internationally</Text>
         </div>
+        
+        {error && (
+          <Alert
+            message="Registration Error"
+            description={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 24 }}
+            closable
+            onClose={() => setError(null)}
+          />
+        )}
 
         <Form
           form={form}

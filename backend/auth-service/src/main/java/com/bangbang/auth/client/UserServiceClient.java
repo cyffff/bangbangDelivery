@@ -1,26 +1,25 @@
 package com.bangbang.auth.client;
 
+import com.bangbang.auth.dto.UserProfileDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import com.bangbang.auth.dto.UserProfileDto;
-
 /**
- * Feign client for communicating with the user-service.
+ * Feign client for calling User Service APIs.
  */
-@FeignClient(name = "user-service")
+@FeignClient(name = "user-service", url = "${app.services.user-service.url}")
 public interface UserServiceClient {
 
     /**
-     * Get a user by ID from the user-service.
+     * Get a user profile by ID.
      *
-     * @param id the user ID
+     * @param userId the user ID
      * @return the user profile
      */
-    @GetMapping("/api/v1/users/{id}")
-    ResponseEntity<UserProfileDto> getUserById(@PathVariable("id") Long id);
+    @GetMapping("/api/v1/users/{userId}")
+    ResponseEntity<UserProfileDto> getUserById(@PathVariable("userId") Long userId);
 
     /**
      * Get a user by username from the user-service.

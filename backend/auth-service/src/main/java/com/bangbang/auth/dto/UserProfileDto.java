@@ -1,6 +1,6 @@
 package com.bangbang.auth.dto;
 
-import java.util.Set;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO for user profile data.
+ * DTO for user profile information.
  */
 @Data
 @Builder
@@ -49,7 +49,7 @@ public class UserProfileDto {
     /**
      * User roles (e.g., "USER", "ADMIN").
      */
-    private Set<String> roles;
+    private List<String> roles;
 
     /**
      * URL to profile image.

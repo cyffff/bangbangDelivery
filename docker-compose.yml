@@ -56,7 +56,7 @@ services:
       - user-service
       - order-service
 
-  # Backend Services
+  # Backend Services - Real Java implementations
   auth-service:
     container_name: bangbang_auth
     build:
@@ -85,21 +85,49 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/api/v1/auth/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # For now, we'll use simple Dockerfiles for these services since we're focusing on auth
   user-service:
     container_name: bangbang_user
-    image: openjdk:11-jre-slim
-    command: sh -c "echo 'User Service Placeholder - Real service needs to be built manually' && tail -f /dev/null"
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang_user?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
     networks:
       - bangbang-network
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   order-service:
     container_name: bangbang_order
-    image: openjdk:11-jre-slim
-    command: sh -c "echo 'Order Service Placeholder - Real service needs to be built manually' && tail -f /dev/null"
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8083
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bangbang_order?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
     networks:
       - bangbang-network
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   # Frontend
   frontend:

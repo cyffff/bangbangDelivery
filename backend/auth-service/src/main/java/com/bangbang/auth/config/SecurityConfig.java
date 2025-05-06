@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 
 import com.bangbang.auth.security.JwtAuthenticationEntryPoint;
 import com.bangbang.auth.security.JwtAuthenticationFilter;
@@ -52,7 +53,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeRequests()
-                .antMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh-token").permitAll()
+                // Public endpoints
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/v1/auth/browser-register").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                .antMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/browser-register", "/api/v1/auth/refresh-token", "/health", "/test", "/api/v1/auth/test", "/api/v1/auth/health").permitAll()
                 .antMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated();
         

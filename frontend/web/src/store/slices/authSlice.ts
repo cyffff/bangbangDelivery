@@ -76,7 +76,10 @@ export const register = createAsyncThunk(
       const response = await authApi.register(userData);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Registration failed');
+      // Ensure we return the actual error message, not the axios error object
+      const errorMessage = error.message || 'Registration failed';
+      console.log('Registration error in authSlice:', errorMessage);
+      return rejectWithValue(errorMessage);
     }
   }
 );

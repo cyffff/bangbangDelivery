@@ -4,6 +4,105 @@
 
 BangBang Delivery是一个跨境物流平台，连接需要国际运输物品的用户与有行程的旅行者，类似Airmule的商业模式。本文档为Cursor IDE提供项目结构和开发指南。
 
+
+name: Build Bangbang-Delivery Web and Backend (Grabr-style Imitation, Only Delivery)
+description: |
+  Build a React web app and backend service for "Bangbang-Delivery", imitating the user flow and frontend style of Grabr (https://grabr.io/en/order).
+  Business model: Only deliver existing items (no shopping). Connect "Requesters" with "Travelers" for deliveries.
+
+tasks:
+  - Create a React web app mimicking Grabr's frontend UX/UI:
+    - Clean, lightweight design
+    - Card-style task listing
+    - Smooth multi-step forms for posting a delivery
+    - Action buttons: "Post a Request", "Accept Delivery", "Chat"
+    - Modals/popups for confirmations
+    - Responsive layout, mobile-friendly
+  - Build RESTful backend APIs to support frontend:
+    - User registration/login with phone number
+    - Publish delivery task
+    - Browse tasks (with filters)
+    - Accept task
+    - Task status update (Accepted / In Progress / Delivered / Completed)
+
+frontend_pages:
+  - Home Page:
+      - Task List: Cards showing Item Type, Name, City, Delivery Method, Reward (optional), Published Time
+      - Button: "Post Delivery Request"
+  - Publish Task Page (Multi-Step Form):
+      Step 1: Item Information
+          - Item Type (dropdown): Food / Medicine / Documents / Electronics / Jewelry / Other
+          - Item Name (input)
+          - Estimated Weight (kg)
+          - Estimated Size (optional, length × width × height cm)
+      Step 2: Delivery Info
+          - Requester Name + Phone
+          - Recipient Name + Phone + Receiving City
+          - Expected Receiving Method (Option A/B/C)
+          - Remarks (textarea)
+      Step 3: Confirm and Publish (Preview all information)
+  - Task Details Page:
+      - Full Task Info
+      - Button: "Accept Delivery"
+      - After accepting, show contact info (phone / WeChat)
+  - My Tasks Page:
+      - Tabs: "My Published Tasks" / "My Accepted Tasks"
+      - Status tracking (Pending / Accepted / Completed)
+  - Authentication Pages:
+      - Phone Number Login/Register
+      - Minimal user info needed at signup (name, phone)
+  
+backend_requirements:
+  - RESTful APIs:
+      - POST /api/register (phone, password)
+      - POST /api/login (JWT token return)
+      - POST /api/tasks (publish delivery task)
+      - GET /api/tasks (list available tasks, pagination)
+      - GET /api/tasks/{id} (task detail)
+      - POST /api/tasks/{id}/accept (accept delivery)
+      - PATCH /api/tasks/{id}/status (update delivery status)
+  - JWT authentication for protected APIs
+  - Database: MongoDB or MySQL
+      - User table/collection
+      - Task table/collection
+      - Optional: Delivery History
+
+user_flow:
+  - Requester publishes a delivery task.
+  - Traveler browses available tasks.
+  - Traveler accepts a task.
+  - Contact info exchanged automatically after acceptance.
+  - Delivery status updated manually.
+  - No in-platform payment initially (optional later).
+
+grabr_ui_notes:
+  - Light color theme (white background, grey sections)
+  - Use rounded cards for each task listing.
+  - Clear CTA (Call To Action) buttons: "Post Request", "Accept Delivery"
+  - Minimalist multi-step forms (one step per page, with "Next" and "Back" buttons)
+  - Modal popups for confirming accept / publish actions
+  - Validation hints under fields (e.g., "Phone number is required")
+  - Auto-refresh or notification after task accepted
+  - Mobile friendly (priority)
+
+technical_notes:
+  - Frontend: React + TailwindCSS
+  - Backend: Node.js + Express (or Python + FastAPI)
+  - API documentation: OpenAPI/Swagger
+  - Deployment ready for future extension to WeChat Mini Programs.
+
+business_rules:
+  - No product purchase involved.
+  - Only deliver owned or sent items.
+  - Weight and size must be reasonable.
+  - Contact info shown only after task acceptance.
+  - Optional: Add reward field (money tip) in future.
+
+extra_guidance:
+  - Try to keep frontend code modular: Pages, Components, Services
+  - Write backend code cleanly with router/controller/service structure
+  - Prepare for uploading to cloud deployment in the future (AWS, Azure, etc.)
+
 ## 技术栈
 
 - **前端**：React + TypeScript + Redux + Ant Design

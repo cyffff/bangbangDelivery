@@ -1,17 +1,19 @@
-FROM openjdk:11-jdk-slim
+FROM node:16-alpine
+
 WORKDIR /app
 
-# Create a simple "Hello World" JAR file
-RUN echo 'package com.bangbang.order; \
-public class OrderServiceApplication { \
-    public static void main(String[] args) { \
-        System.out.println("Order Service started"); \
-        while(true) { try { Thread.sleep(1000); } catch(Exception e) {} } \
-    } \
-}' > OrderServiceApplication.java && \
-    javac OrderServiceApplication.java && \
-    jar cfe app.jar com.bangbang.order.OrderServiceApplication OrderServiceApplication.class
+# Create directory structure
+RUN mkdir -p src/models src/controllers src/routes src/utils
 
+# Copy package files
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
+COPY src/ ./src/
+
+# Expose port
 EXPOSE 8083
 
-ENTRYPOINT ["java", "-jar", "app.jar"] 
+# Start server
+CMD ["npm", "start"] 

@@ -52,6 +52,19 @@
 └────────────────────────────────────────────────────────────┘
 ```
 
+### 前后端交互架构
+```
+前端应用层 (React Web + WeChat Mini Program + Mobile App)
+           ↓
+统一 HTTPS API 调用
+           ↓
+API网关 (Spring Cloud Gateway)
+           ↓
+后端微服务集群 (Spring Boot)
+           ↓
+数据库 (MySQL, Redis, Elasticsearch)
+```
+
 ### 2. 技术栈选择
 
 #### 后端技术栈

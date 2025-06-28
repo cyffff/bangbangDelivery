@@ -1,0 +1,130 @@
+/* Shake animation for error fields */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* More prominent error text */
+.ant-form-item-explain-error {
+  font-weight: 500;
+  margin-top: 4px;
+  color: #ff4d4f;
+}
+
+/* Custom error state for input fields */
+.ant-form-item-has-error .ant-input:hover,
+.ant-form-item-has-error .ant-select-selector:hover {
+  border-color: #ff7875;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+}
+
+.ant-form-item-has-error .ant-input:focus,
+.ant-form-item-has-error .ant-select-selector:focus {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+}
+
+/* Registration container layout */
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 24px;
+}
+
+.register-content {
+  width: 100%;
+  max-width: 500px;
+}
+
+.register-card {
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+/* Friendly error message styling */
+.friendly-error {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.friendly-error strong {
+  font-weight: 600;
+  color: #cf1322;
+}
+
+.friendly-error p {
+  margin-bottom: 8px;
+}
+
+.friendly-error ul {
+  margin-left: 20px;
+  text-align: left;
+  padding-left: 0;
+}
+
+.friendly-error li {
+  margin-bottom: 4px;
+}
+
+/* Improve the alert styling */
+.registration-error-alert {
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+.registration-error-alert .ant-alert-message {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.registration-error-alert .ant-alert-description {
+  font-size: 14px;
+}
+
+/* Main form styling */
+.register-form-button {
+  width: 100%;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Phone input field */
+.phone-input-container {
+  display: flex;
+  align-items: flex-start;
+}
+
+.phone-prefix {
+  width: 100px;
+  margin-right: 8px;
+}
+
+.phone-number {
+  flex: 1;
+}
+
+/* Link to login */
+.login-link {
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .register-card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .register-container {
+    padding: 16px;
+  }
+} 

@@ -35,6 +35,10 @@ COPY nginx/index.html /usr/share/nginx/html/loading.html
 # Set up nginx configuration
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
+# Fix permissions for the nginx user to access all files
+RUN chmod -R 755 /usr/share/nginx/html && \
+    chown -R nginx:nginx /usr/share/nginx/html
+
 # Expose port 80
 EXPOSE 80
 

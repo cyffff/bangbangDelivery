@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="BangBang Delivery - Cross-border logistics platform"
+      content="BangBang Delivery - International Shipping Made Easy"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
@@ -24,6 +24,39 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
+    <!-- Add cache-busting parameter to prevent caching issues -->
+    <script>
+      // Cache busting function
+      function addTimestamp(url) {
+        var separator = url.includes('?') ? '&' : '?';
+        return url + separator + 't=' + new Date().getTime();
+      }
+      
+      // Override fetch to add timestamp to certain URLs
+      var originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        if (typeof url === 'string' && url.match(/\.(js|css)$/)) {
+          url = addTimestamp(url);
+        }
+        return originalFetch.call(this, url, options);
+      };
+      
+      // Add timestamp to dynamically loaded scripts
+      var originalCreateElement = document.createElement;
+      document.createElement = function(tag) {
+        var element = originalCreateElement.call(document, tag);
+        if (tag.toLowerCase() === 'script' || tag.toLowerCase() === 'link') {
+          var originalSetAttribute = element.setAttribute;
+          element.setAttribute = function(name, value) {
+            if ((name === 'src' || name === 'href') && typeof value === 'string' && value.match(/\.(js|css)$/)) {
+              value = addTimestamp(value);
+            }
+            return originalSetAttribute.call(this, name, value);
+          };
+        }
+        return element;
+      };
+    </script>
     <title>BangBang Delivery</title>
   </head>
   <body>

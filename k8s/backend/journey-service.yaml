@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journey-service
+  namespace: bangbang
+  labels:
+    app: journey-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: journey-service
+  template:
+    metadata:
+      labels:
+        app: journey-service
+    spec:
+      containers:
+      - name: journey-service
+        image: bangbangdelivery-journey-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8085
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8085
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8085
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: journey-service
+  namespace: bangbang
+  labels:
+    app: journey-service
+spec:
+  ports:
+  - port: 8085
+    targetPort: 8085
+    protocol: TCP
+  selector:
+    app: journey-service
+  type: ClusterIP 

@@ -1,46 +1,52 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Divider, Checkbox, message } from 'antd';
-import { UserOutlined, LockOutlined, MobileOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Divider, Checkbox, message, Alert } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { login } from '../store/slices/authSlice';
+import { AppDispatch } from '../store';
+import { LoginRequest } from '../api/authApi';
 
 const { Title, Text } = Typography;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Get the redirect path from location state
   const from = location.state?.from?.pathname || '/';
 
   const onFinish = async (values: any) => {
+    setError(null);
     try {
       setLoading(true);
-      // This would be a real API call in a production app
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Simulate successful login
-      const userData = {
-        id: '1',
-        username: 'user1',
-        phoneNumber: values.phoneNumber,
-        email: 'user1@example.com',
+      
+      // Prepare login request
+      const loginRequest: LoginRequest = {
+        username: values.username,
+        password: values.password,
+        remember: values.remember
       };
       
-      dispatch(login({
-        user: userData,
-        token: 'mock-jwt-token'
-      }));
+      // Dispatch login action
+      const resultAction = await dispatch(login(loginRequest));
       
-      message.success('Login successful');
-      
-      // Redirect to the page they tried to visit or home
-      navigate(from, { replace: true });
-    } catch (error) {
+      if (login.fulfilled.match(resultAction)) {
+        message.success('Login successful');
+        // Redirect to the page they tried to visit or home
+        navigate(from, { replace: true });
+      } else if (login.rejected.match(resultAction)) {
+        const errorMsg = resultAction.payload || 'Login failed';
+        setError(errorMsg as string);
+        message.error('Login failed. Please check your credentials.');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setError(error.message || 'Login failed. Please check your credentials.');
       message.error('Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -55,6 +61,18 @@ const LoginPage: React.FC = () => {
           <Text type="secondary">Login to access your account</Text>
         </div>
 
+        {error && (
+          <Alert
+            message="Login Error"
+            description={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 24 }}
+            closable
+            onClose={() => setError(null)}
+          />
+        )}
+
         <Form
           form={form}
           name="login"
@@ -64,16 +82,15 @@ const LoginPage: React.FC = () => {
           size="large"
         >
           <Form.Item
-            name="phoneNumber"
-            label="Phone Number"
+            name="username"
+            label="Username"
             rules={[
-              { required: true, message: 'Please enter your phone number' },
-              { pattern: /^\d+$/, message: 'Please enter a valid phone number' }
+              { required: true, message: 'Please enter your username' }
             ]}
           >
             <Input 
-              prefix={<MobileOutlined className="site-form-item-icon" />} 
-              placeholder="Phone Number" 
+              prefix={<UserOutlined className="site-form-item-icon" />} 
+              placeholder="Username" 
             />
           </Form.Item>
 

@@ -2,6 +2,7 @@ package com.bangbang.auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -12,6 +13,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 
 import com.bangbang.auth.security.JwtAuthenticationEntryPoint;
 import com.bangbang.auth.security.JwtAuthenticationFilter;
@@ -30,6 +33,7 @@ import lombok.RequiredArgsConstructor;
     prePostEnabled = true
 )
 @RequiredArgsConstructor
+@Order(1) // Lower order means higher priority
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final CustomUserDetailsService userDetailsService;
@@ -49,7 +53,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeRequests()
-                .antMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh-token").permitAll()
+                // Public endpoints
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/v1/auth/browser-register").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                .antMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/browser-register", "/api/v1/auth/refresh-token", "/health", "/test", "/api/v1/auth/test", "/api/v1/auth/health").permitAll()
                 .antMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated();
         
@@ -59,6 +68,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     @Override
+    @Primary
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }

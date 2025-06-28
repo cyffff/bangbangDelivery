@@ -1,16 +1,12 @@
 FROM openjdk:11-jdk-slim
 WORKDIR /app
 
-# Create a simple "Hello World" JAR file
-RUN echo 'package com.bangbang.demand; \
-public class DemandServiceApplication { \
-    public static void main(String[] args) { \
-        System.out.println("Demand Service started"); \
-        while(true) { try { Thread.sleep(1000); } catch(Exception e) {} } \
-    } \
-}' > DemandServiceApplication.java && \
-    javac DemandServiceApplication.java && \
-    jar cfe app.jar com.bangbang.demand.DemandServiceApplication DemandServiceApplication.class
+# Copy Java source file
+COPY src/main/java/com/bangbang/demand/SimpleDemandService.java .
+
+# Compile and create JAR (include all generated class files)
+RUN javac SimpleDemandService.java && \
+    jar cfe app.jar SimpleDemandService *.class
 
 EXPOSE 8084
 

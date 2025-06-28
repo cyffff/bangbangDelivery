@@ -28,6 +28,7 @@ import JourneysPage from './pages/JourneysPage';
 import JourneyDetailsPage from './pages/JourneyDetailsPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import { AppDispatch } from './store';
+import bangbangLogo from './assets/bangbang_logo.png';
 
 const { Header, Content, Footer } = Layout;
 
@@ -76,6 +77,9 @@ const App: React.FC = () => {
       open={mobileMenuVisible}
       width={250}
     >
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <img src={bangbangLogo} alt="BangBang Logo" style={{ height: '50px' }} />
+      </div>
       <Menu mode="vertical" selectedKeys={[location.pathname]} style={{ border: 'none' }}>
         <Menu.Item key="/" icon={<HomeOutlined />} onClick={() => setMobileMenuVisible(false)}>
           <Link to="/">Home</Link>
@@ -134,7 +138,10 @@ const App: React.FC = () => {
           />
         )}
         <div className="logo">
-          <Link to="/">BangBang Delivery</Link>
+          <Link to="/">
+            <img src={bangbangLogo} alt="BangBang Delivery" style={{ height: '40px', marginRight: '10px' }} />
+            BangBang Delivery
+          </Link>
         </div>
         {!isMobile ? (
           <div className="header-nav">
@@ -248,6 +255,7 @@ const App: React.FC = () => {
         </Routes>
       </Content>
       <Footer style={{ textAlign: 'center', padding: isMobile ? '12px 0' : '24px 0' }}>
+        <img src={bangbangLogo} alt="BangBang Logo" style={{ height: '30px', marginRight: '10px' }} />
         BangBang Delivery ©{new Date().getFullYear()} Created by BangBang Team
       </Footer>
     </Layout>

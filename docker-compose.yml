@@ -55,6 +55,8 @@ services:
       - auth-service
       - user-service
       - order-service
+      - demand-service
+      - journey-service
 
   # Backend Services - Real Java implementations
   auth-service:
@@ -128,6 +130,46 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+
+  demand-service:
+    container_name: bangbang_demand
+    build:
+      context: ./backend/demand-service
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8084"
+    restart: on-failure
+    networks:
+      - bangbang-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8084/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  journey-service:
+    container_name: bangbang_journey
+    build:
+      context: ./backend/journey-service
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+    restart: on-failure
+    networks:
+      - bangbang-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      demand-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8085/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Frontend
   frontend:

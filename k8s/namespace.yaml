@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bangbang
+  labels:
+    name: bangbang
+    app: bangbang-delivery 

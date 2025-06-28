@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-scripts
+  namespace: bangbang
+data:
+  00-init-databases.sql: |
+    -- Create databases
+    CREATE DATABASE IF NOT EXISTS bangbang_auth;
+    CREATE DATABASE IF NOT EXISTS bangbang;
+    CREATE DATABASE IF NOT EXISTS bangbang_user;
+    CREATE DATABASE IF NOT EXISTS bangbang_order;
+
+    -- Switch to the auth database
+    USE bangbang_auth;
+
+    -- Grant privileges to both users with specific permissions
+    GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+    GRANT ALL PRIVILEGES ON bangbang_auth.* TO 'bangbang'@'%';
+    GRANT ALL PRIVILEGES ON bangbang.* TO 'bangbang'@'%';
+    GRANT ALL PRIVILEGES ON bangbang_user.* TO 'bangbang'@'%';
+    GRANT ALL PRIVILEGES ON bangbang_order.* TO 'bangbang'@'%';
+
+    -- Additional permissions for network connections
+    GRANT SUPER ON *.* TO 'root'@'%';
+
+    -- Apply privileges
+    FLUSH PRIVILEGES;
+  01-create-roles.sql: |
+    -- Create the default roles for the auth database
+    USE bangbang_auth;
+
+    -- Check if the roles table exists
+    CREATE TABLE IF NOT EXISTS roles (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        description VARCHAR(255)
+    );
+
+    -- Insert default roles if they don't exist
+    INSERT IGNORE INTO roles (name, description) VALUES
+    ('ROLE_USER', 'Regular user with basic privileges'),
+    ('ROLE_ADMIN', 'Administrator with all privileges'),
+    ('ROLE_MANAGER', 'Manager with management privileges'),
+    ('ROLE_DRIVER', 'Delivery driver role');
+
+    -- Display the roles to confirm
+    SELECT * FROM roles; 

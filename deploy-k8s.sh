@@ -4,18 +4,24 @@ set -e
 
 echo "🚀 Deploying BangBang Delivery to Kubernetes..."
 
+# Check if k8s directory exists
+if [ ! -d "k8s" ]; then
+    echo "❌ Error: k8s directory not found. Please run this script from the project root."
+    exit 1
+fi
+
 # Create namespace
 echo "📦 Creating namespace..."
-kubectl apply -f namespace.yaml
+kubectl apply -f k8s/namespace.yaml
 
 # Deploy secrets and configmaps first
 echo "🔐 Deploying secrets and configmaps..."
-kubectl apply -f secrets/
-kubectl apply -f configmaps/
+kubectl apply -f k8s/secrets/
+kubectl apply -f k8s/configmaps/
 
 # Deploy database layer
 echo "🗄️ Deploying database services..."
-kubectl apply -f database/
+kubectl apply -f k8s/database/
 
 # Wait for databases to be ready
 echo "⏳ Waiting for MySQL to be ready..."
@@ -26,7 +32,7 @@ kubectl wait --for=condition=ready pod -l app=redis -n bangbang --timeout=300s
 
 # Deploy backend services
 echo "🔧 Deploying backend services..."
-kubectl apply -f backend/
+kubectl apply -f k8s/backend/
 
 # Wait for backend services to be ready
 echo "⏳ Waiting for backend services to be ready..."
@@ -38,11 +44,11 @@ kubectl wait --for=condition=ready pod -l app=journey-service -n bangbang --time
 
 # Deploy frontend
 echo "🌐 Deploying frontend..."
-kubectl apply -f frontend/
+kubectl apply -f k8s/frontend/
 
 # Deploy gateway
 echo "🚪 Deploying gateway..."
-kubectl apply -f gateway/
+kubectl apply -f k8s/gateway/
 
 # Wait for frontend and gateway to be ready
 echo "⏳ Waiting for frontend and gateway to be ready..."

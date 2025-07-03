@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Button, 
@@ -15,7 +15,8 @@ import {
   StepLabel, 
   Stepper, 
   TextField, 
-  Typography 
+  Typography,
+  Alert
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs, { Dayjs } from 'dayjs';
@@ -23,702 +24,396 @@ import {
   DocumentRequest, 
   DocumentType, 
   KycSubmissionRequest, 
-  KycVerificationRequest 
+  KycVerificationRequest,
+  KycVerificationResponse
 } from '../../api/kycApi';
 import kycApi from '../../api/kycApi';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 
-const steps = ['Personal Information', 'Document Upload', 'Review'];
-
-interface DocumentUpload {
-  type: DocumentType;
-  file: File | null;
-  backFile?: File | null;
-  selfieFile?: File | null;
-  documentNumber: string;
-  issueDate?: Dayjs | null;
-  expiryDate?: Dayjs | null;
-  issuingCountry?: string;
-}
-
-interface KycSubmissionFormProps {
-  onSuccess?: () => void;
-}
-
-const KycSubmissionForm: React.FC<KycSubmissionFormProps> = ({ onSuccess }) => {
+const KycSubmissionForm: React.FC = () => {
   const { currentUser } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
+  const [formData, setFormData] = useState<KycSubmissionRequest>({
+    verification: {
+      userId: currentUser?.id || 0,
+      fullName: '',
+      dateOfBirth: '',
+      nationality: '',
+      address: '',
+      city: '',
+      country: '',
+      postalCode: '',
+      phoneNumber: ''
+    },
+    documents: []
+  });
+  const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
-  const [personalInfo, setPersonalInfo] = useState<KycVerificationRequest>({
-    userId: currentUser?.id || 0,
-    fullName: '',
-    dateOfBirth: '',
-    nationality: '',
-    address: '',
-    city: '',
-    country: '',
-    postalCode: '',
-    phoneNumber: ''
-  });
-  
-  const [documents, setDocuments] = useState<DocumentUpload[]>([
-    {
-      type: DocumentType.PASSPORT,
-      file: null,
-      documentNumber: '',
-      issueDate: null,
-      expiryDate: null,
-      issuingCountry: ''
-    }
-  ]);
-  
-  const [errors, setErrors] = useState<{
-    personalInfo: Partial<Record<keyof KycVerificationRequest, string>>,
-    documents: { [key: number]: Partial<Record<keyof DocumentUpload, string>> }
-  }>({
-    personalInfo: {},
-    documents: {}
-  });
+  const [success, setSuccess] = useState('');
+  const [existingVerification, setExistingVerification] = useState<KycVerificationResponse | null>(null);
 
-  const validatePersonalInfo = (): boolean => {
-    const newErrors: Partial<Record<keyof KycVerificationRequest, string>> = {};
-    let isValid = true;
-
-    if (!personalInfo.fullName) {
-      newErrors.fullName = 'Full name is required';
-      isValid = false;
-    }
-
-    if (!personalInfo.dateOfBirth) {
-      newErrors.dateOfBirth = 'Date of birth is required';
-      isValid = false;
-    }
-
-    if (!personalInfo.nationality) {
-      newErrors.nationality = 'Nationality is required';
-      isValid = false;
-    }
-
-    if (!personalInfo.address) {
-      newErrors.address = 'Address is required';
-      isValid = false;
-    }
-
-    if (!personalInfo.city) {
-      newErrors.city = 'City is required';
-      isValid = false;
-    }
-
-    if (!personalInfo.country) {
-      newErrors.country = 'Country is required';
-      isValid = false;
-    }
-
-    if (!personalInfo.postalCode) {
-      newErrors.postalCode = 'Postal code is required';
-      isValid = false;
-    }
-
-    if (!personalInfo.phoneNumber) {
-      newErrors.phoneNumber = 'Phone number is required';
-      isValid = false;
-    }
-
-    setErrors(prev => ({ ...prev, personalInfo: newErrors }));
-    return isValid;
-  };
-
-  const validateDocuments = (): boolean => {
-    const newErrors: { [key: number]: Partial<Record<keyof DocumentUpload, string>> } = {};
-    let isValid = true;
-
-    documents.forEach((doc, index) => {
-      const docErrors: Partial<Record<keyof DocumentUpload, string>> = {};
-
-      if (!doc.type) {
-        docErrors.type = 'Document type is required';
-        isValid = false;
-      }
-
-      if (!doc.file) {
-        docErrors.file = 'Document file is required';
-        isValid = false;
-      }
-
-      if (!doc.documentNumber) {
-        docErrors.documentNumber = 'Document number is required';
-        isValid = false;
-      }
-
-      if (doc.type === DocumentType.PASSPORT || 
-          doc.type === DocumentType.NATIONAL_ID || 
-          doc.type === DocumentType.DRIVERS_LICENSE || 
-          doc.type === DocumentType.RESIDENCE_PERMIT) {
-        if (!doc.expiryDate) {
-          docErrors.expiryDate = 'Expiry date is required';
-          isValid = false;
+  useEffect(() => {
+    if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        verification: {
+          ...prev.verification,
+          userId: currentUser.id,
+          fullName: currentUser.fullName || '',
+          dateOfBirth: currentUser.dateOfBirth || '',
+          nationality: currentUser.nationality || '',
+          address: currentUser.address || '',
+          city: currentUser.city || '',
+          country: currentUser.country || '',
+          postalCode: currentUser.postalCode || '',
+          phoneNumber: currentUser.phoneNumber || ''
         }
-        
-        if (!doc.issuingCountry) {
-          docErrors.issuingCountry = 'Issuing country is required';
-          isValid = false;
+      }));
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    const fetchUserVerification = async () => {
+      try {
+        if (currentUser?.id) {
+          const verification = await kycApi.getUserKycVerification(currentUser.id);
+          if (verification) {
+            setExistingVerification(verification);
+            setFormData(prev => ({
+              ...prev,
+              verification: {
+                userId: verification.userId,
+                fullName: verification.fullName || '',
+                dateOfBirth: verification.dateOfBirth || '',
+                nationality: verification.nationality || '',
+                address: verification.address || '',
+                city: verification.city || '',
+                country: verification.country || '',
+                postalCode: verification.postalCode || '',
+                phoneNumber: verification.phoneNumber || ''
+              },
+              documents: verification.documents.map(doc => ({
+                documentType: doc.documentType,
+                documentNumber: doc.documentNumber,
+                issueDate: doc.issueDate,
+                expiryDate: doc.expiryDate,
+                issuingCountry: doc.issuingCountry,
+                documentUrl: doc.documentUrl,
+                backSideUrl: doc.backSideUrl,
+                selfieUrl: doc.selfieUrl
+              }))
+            }));
+          }
         }
+      } catch (error) {
+        console.error('Error fetching user verification:', error);
       }
+    };
 
-      newErrors[index] = docErrors;
-    });
+    fetchUserVerification();
+  }, [currentUser]);
 
-    setErrors(prev => ({ ...prev, documents: newErrors }));
-    return isValid;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      verification: {
+        ...prev.verification,
+        [name]: value
+      }
+    }));
   };
 
-  const handleNext = () => {
-    if (activeStep === 0) {
-      if (!validatePersonalInfo()) return;
-    } else if (activeStep === 1) {
-      if (!validateDocuments()) return;
-    }
-    setActiveStep(prevActiveStep => prevActiveStep + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep(prevActiveStep => prevActiveStep - 1);
-  };
-
-  const handlePersonalInfoChange = (field: keyof KycVerificationRequest) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPersonalInfo({
-      ...personalInfo,
-      [field]: event.target.value
-    });
-  };
-
-  const handleDateOfBirthChange = (date: Dayjs | null) => {
-    setPersonalInfo({
-      ...personalInfo,
-      dateOfBirth: date ? date.format('YYYY-MM-DD') : ''
-    });
-  };
-
-  const handleDocumentChange = (index: number, field: keyof DocumentUpload) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const updatedDocuments = [...documents];
-    updatedDocuments[index] = { ...updatedDocuments[index], [field]: event.target.value };
-    setDocuments(updatedDocuments);
-  };
-
-  const handleDocumentTypeChange = (index: number) => (
-    event: React.ChangeEvent<{ value: unknown }>
-  ) => {
-    const updatedDocuments = [...documents];
-    updatedDocuments[index] = { ...updatedDocuments[index], type: event.target.value as DocumentType };
-    setDocuments(updatedDocuments);
-  };
-
-  const handleDocumentDateChange = (index: number, field: 'issueDate' | 'expiryDate') => (date: Dayjs | null) => {
-    const updatedDocuments = [...documents];
-    updatedDocuments[index] = { ...updatedDocuments[index], [field]: date };
-    setDocuments(updatedDocuments);
-  };
-
-  const handleFileChange = (index: number, fileType: 'file' | 'backFile' | 'selfieFile') => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files[0]) {
-      const updatedDocuments = [...documents];
-      updatedDocuments[index] = { ...updatedDocuments[index], [fileType]: event.target.files[0] };
-      setDocuments(updatedDocuments);
+  const handleDateOfBirthChange = (date: dayjs.Dayjs | null) => {
+    if (date) {
+      setFormData(prev => ({
+        ...prev,
+        verification: {
+          ...prev.verification,
+          dateOfBirth: date.format('YYYY-MM-DD')
+        }
+      }));
     }
   };
 
-  const addDocument = () => {
-    setDocuments([
-      ...documents,
-      {
-        type: DocumentType.PASSPORT,
-        file: null,
-        documentNumber: '',
-        issueDate: null,
-        expiryDate: null,
-        issuingCountry: ''
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, documentType: DocumentType) => {
+    if (e.target.files && e.target.files[0] && currentUser?.id) {
+      const file = e.target.files[0];
+      try {
+        const response = await kycApi.uploadDocument(currentUser.id, documentType, file);
+        const documentIds = [...formData.documents];
+        documentIds.push({
+          documentType,
+          documentNumber: '',
+          documentUrl: response.fileUrl
+        });
+        setFormData(prev => ({
+          ...prev,
+          documents: documentIds
+        }));
+      } catch (error) {
+        console.error('Error uploading document:', error);
       }
-    ]);
-  };
-
-  const removeDocument = (index: number) => {
-    if (documents.length === 1) return;
-    const updatedDocuments = documents.filter((_, i) => i !== index);
-    const updatedErrors = { ...errors };
-    delete updatedErrors.documents[index];
-    setDocuments(updatedDocuments);
-    setErrors(updatedErrors);
+    }
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
-    
     try {
-      // Prepare documents
-      const documentRequests: DocumentRequest[] = documents.map(doc => {
-        const request: DocumentRequest = {
-          documentType: doc.type,
-          documentNumber: doc.documentNumber,
-          fileUrl: 'placeholder-url', // This would be replaced by the actual uploaded file URL
-          description: `${doc.type} document`
-        };
-        
-        if (doc.expiryDate) {
-          request.expiryDate = doc.expiryDate.format('YYYY-MM-DD');
-        }
-        
-        if (doc.issueDate) {
-          request.issueDate = doc.issueDate.format('YYYY-MM-DD');
-        }
-        
-        if (doc.issuingCountry) {
-          request.issuingCountry = doc.issuingCountry;
-        }
-        
-        return request;
-      });
-      
-      // Upload files first and get URLs (in a real implementation)
-      // For each document we would upload the files and get the URLs
-      
-      // Create the KYC submission request
-      const submissionRequest: KycSubmissionRequest = {
-        verification: personalInfo,
-        documents: documentRequests
-      };
-      
-      // Submit the KYC verification
-      await kycApi.submitKycVerification(submissionRequest);
-      
-      toast.success('KYC verification submitted successfully!');
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-      
-      setActiveStep(activeStep + 1);
+      setLoading(true);
+      await kycApi.submitKycVerification(formData);
+      setSuccess('KYC verification submitted successfully');
+      setActiveStep(2);
     } catch (error) {
       console.error('Error submitting KYC verification:', error);
-      toast.error('Failed to submit KYC verification. Please try again later.');
+      setErrors({ submit: 'Failed to submit KYC verification' });
     } finally {
       setLoading(false);
     }
   };
 
+  const isPersonalInfoComplete = () => {
+    const { verification } = formData;
+    return (
+      verification.fullName.trim() !== '' &&
+      verification.nationality.trim() !== '' &&
+      verification.address.trim() !== '' &&
+      verification.city.trim() !== '' &&
+      verification.country.trim() !== '' &&
+      verification.postalCode.trim() !== '' &&
+      verification.phoneNumber.trim() !== ''
+    );
+  };
+
+  const steps = ['Personal Information', 'Document Upload', 'Review & Submit'];
+
   const renderPersonalInfoForm = () => (
-    <Paper elevation={3} sx={{ p: 3 }}>
-      <Typography variant="h6" mb={3}>Personal Information</Typography>
+    <Box>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid xs={12}>
+          <Typography variant="h6">Personal Information</Typography>
+        </Grid>
+
+        <Grid xs={12}>
           <TextField
-            fullWidth
-            label="Full Name"
-            value={personalInfo.fullName}
-            onChange={handlePersonalInfoChange('fullName')}
-            error={!!errors.personalInfo.fullName}
-            helperText={errors.personalInfo.fullName}
             required
+            fullWidth
+            id="fullName"
+            name="fullName"
+            label="Full Name"
+            value={formData.verification.fullName}
+            onChange={handleInputChange}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+
+        <Grid xs={12} sm={6}>
           <DatePicker
             label="Date of Birth"
-            value={personalInfo.dateOfBirth ? dayjs(personalInfo.dateOfBirth) : null}
-            onChange={(newValue) => handleDateOfBirthChange(newValue as Dayjs | null)}
+            value={formData.verification.dateOfBirth ? dayjs(formData.verification.dateOfBirth) : null}
+            onChange={handleDateOfBirthChange}
+            disableFuture
             slotProps={{
               textField: {
                 fullWidth: true,
-                required: true,
-                error: !!errors.personalInfo.dateOfBirth,
-                helperText: errors.personalInfo.dateOfBirth
+                required: true
               }
             }}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+
+        <Grid xs={12} sm={6}>
           <TextField
+            required
             fullWidth
+            id="nationality"
+            name="nationality"
             label="Nationality"
-            value={personalInfo.nationality}
-            onChange={handlePersonalInfoChange('nationality')}
-            error={!!errors.personalInfo.nationality}
-            helperText={errors.personalInfo.nationality}
-            required
+            value={formData.verification.nationality}
+            onChange={handleInputChange}
           />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid xs={12}>
           <TextField
+            required
             fullWidth
+            id="address"
+            name="address"
             label="Address"
-            value={personalInfo.address}
-            onChange={handlePersonalInfoChange('address')}
-            error={!!errors.personalInfo.address}
-            helperText={errors.personalInfo.address}
-            required
+            value={formData.verification.address}
+            onChange={handleInputChange}
+            multiline
+            rows={3}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+
+        <Grid xs={12} sm={6}>
           <TextField
+            required
             fullWidth
+            id="city"
+            name="city"
             label="City"
-            value={personalInfo.city}
-            onChange={handlePersonalInfoChange('city')}
-            error={!!errors.personalInfo.city}
-            helperText={errors.personalInfo.city}
-            required
+            value={formData.verification.city}
+            onChange={handleInputChange}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+
+        <Grid xs={12} sm={6}>
           <TextField
+            required
             fullWidth
+            id="country"
+            name="country"
             label="Country"
-            value={personalInfo.country}
-            onChange={handlePersonalInfoChange('country')}
-            error={!!errors.personalInfo.country}
-            helperText={errors.personalInfo.country}
-            required
+            value={formData.verification.country}
+            onChange={handleInputChange}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+
+        <Grid xs={12} sm={6}>
           <TextField
+            required
             fullWidth
+            id="postalCode"
+            name="postalCode"
             label="Postal Code"
-            value={personalInfo.postalCode}
-            onChange={handlePersonalInfoChange('postalCode')}
-            error={!!errors.personalInfo.postalCode}
-            helperText={errors.personalInfo.postalCode}
-            required
+            value={formData.verification.postalCode}
+            onChange={handleInputChange}
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
+
+        <Grid xs={12} sm={6}>
           <TextField
-            fullWidth
-            label="Phone Number"
-            value={personalInfo.phoneNumber}
-            onChange={handlePersonalInfoChange('phoneNumber')}
-            error={!!errors.personalInfo.phoneNumber}
-            helperText={errors.personalInfo.phoneNumber}
             required
+            fullWidth
+            id="phoneNumber"
+            name="phoneNumber"
+            label="Phone Number"
+            value={formData.verification.phoneNumber}
+            onChange={handleInputChange}
           />
         </Grid>
       </Grid>
-    </Paper>
+    </Box>
   );
 
-  const renderDocumentUploadForm = () => (
-    <Paper elevation={3} sx={{ p: 3 }}>
-      <Typography variant="h6" mb={3}>Document Upload</Typography>
-      <Typography variant="body2" color="text.secondary" mb={3}>
-        Please provide clear, legible scans or photos of your identification documents.
-        Make sure all details are visible and the entire document is in the frame.
-      </Typography>
-      
-      {documents.map((doc, index) => (
-        <Box key={index} mb={4} p={2} border="1px solid #e0e0e0" borderRadius={1}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="subtitle1">
-              Document {index + 1}
-            </Typography>
-            {documents.length > 1 && (
-              <Button 
-                color="error" 
-                size="small" 
-                onClick={() => removeDocument(index)}
-              >
-                Remove
-              </Button>
-            )}
-          </Box>
-          
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <FormControl 
-                fullWidth 
-                error={!!errors.documents[index]?.type}
-                required
-              >
-                <InputLabel>Document Type</InputLabel>
-                <Select
-                  value={doc.type}
-                  onChange={handleDocumentTypeChange(index) as any}
-                  label="Document Type"
-                >
-                  {kycApi.getDocumentTypes().map((type) => (
-                    <MenuItem key={type.value} value={type.value}>
-                      {type.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.documents[index]?.type && (
-                  <FormHelperText>{errors.documents[index]?.type}</FormHelperText>
-                )}
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Document Number"
-                value={doc.documentNumber}
-                onChange={handleDocumentChange(index, 'documentNumber')}
-                error={!!errors.documents[index]?.documentNumber}
-                helperText={errors.documents[index]?.documentNumber}
-                required
+  const renderDocumentUpload = () => (
+    <Box>
+      <Grid container spacing={2}>
+        <Grid xs={12}>
+          <Typography variant="h6">Document Upload</Typography>
+        </Grid>
+
+        {Object.values(DocumentType).map((type) => (
+          <Grid xs={12} key={type}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="subtitle1">{type.replace(/_/g, ' ')}</Typography>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => handleFileUpload(e, type)}
               />
-            </Grid>
-            
-            {(doc.type === DocumentType.PASSPORT || 
-              doc.type === DocumentType.NATIONAL_ID || 
-              doc.type === DocumentType.DRIVERS_LICENSE || 
-              doc.type === DocumentType.RESIDENCE_PERMIT) && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    label="Issue Date"
-                    value={doc.issueDate}
-                    onChange={(newValue) => handleDocumentDateChange(index, 'issueDate')(newValue)}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        error: !!errors.documents[index]?.issueDate,
-                        helperText: errors.documents[index]?.issueDate
-                      }
-                    }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    label="Expiry Date"
-                    value={doc.expiryDate}
-                    onChange={(newValue) => handleDocumentDateChange(index, 'expiryDate')(newValue)}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: true,
-                        error: !!errors.documents[index]?.expiryDate,
-                        helperText: errors.documents[index]?.expiryDate
-                      }
-                    }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Issuing Country"
-                    value={doc.issuingCountry || ''}
-                    onChange={handleDocumentChange(index, 'issuingCountry' as keyof DocumentUpload)}
-                    error={!!errors.documents[index]?.issuingCountry}
-                    helperText={errors.documents[index]?.issuingCountry}
-                    required
-                  />
-                </Grid>
-              </>
-            )}
-            
-            <Grid item xs={12}>
-              <Typography variant="body2" mb={1}>
-                Upload Document Front Side (Max 5MB)
-              </Typography>
-              <Button
-                variant="outlined"
-                component="label"
-                fullWidth
-                sx={{ height: 56, textTransform: 'none', justifyContent: 'space-between' }}
-              >
-                {doc.file ? doc.file.name : 'Select File'}
-                <input
-                  type="file"
-                  hidden
-                  accept="image/png,image/jpeg,application/pdf"
-                  onChange={handleFileChange(index, 'file')}
-                />
-              </Button>
-              {errors.documents[index]?.file && (
-                <FormHelperText error>{errors.documents[index]?.file}</FormHelperText>
-              )}
-            </Grid>
-            
-            {(doc.type === DocumentType.NATIONAL_ID || 
-              doc.type === DocumentType.DRIVERS_LICENSE) && (
-              <Grid item xs={12}>
-                <Typography variant="body2" mb={1}>
-                  Upload Document Back Side (Max 5MB)
-                </Typography>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{ height: 56, textTransform: 'none', justifyContent: 'space-between' }}
-                >
-                  {doc.backFile ? doc.backFile.name : 'Select File'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/png,image/jpeg,application/pdf"
-                    onChange={handleFileChange(index, 'backFile')}
-                  />
-                </Button>
-              </Grid>
-            )}
-            
-            {(doc.type === DocumentType.PASSPORT || 
-              doc.type === DocumentType.NATIONAL_ID) && (
-              <Grid item xs={12}>
-                <Typography variant="body2" mb={1}>
-                  Upload Selfie with Document (Max 5MB)
-                </Typography>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{ height: 56, textTransform: 'none', justifyContent: 'space-between' }}
-                >
-                  {doc.selfieFile ? doc.selfieFile.name : 'Select File'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/png,image/jpeg"
-                    onChange={handleFileChange(index, 'selfieFile')}
-                  />
-                </Button>
-              </Grid>
-            )}
+            </Paper>
           </Grid>
-        </Box>
-      ))}
-      
-      <Button variant="outlined" onClick={addDocument} sx={{ mt: 2 }}>
-        Add Another Document
-      </Button>
-    </Paper>
+        ))}
+      </Grid>
+    </Box>
   );
 
-  const renderReviewForm = () => (
-    <Paper elevation={3} sx={{ p: 3 }}>
-      <Typography variant="h6" mb={3}>Review Information</Typography>
-      <Typography variant="body2" color="text.secondary" mb={3}>
-        Please review your information carefully before submission. Once submitted, 
-        you cannot make changes until verification is complete or rejected.
-      </Typography>
-      
-      <Typography variant="subtitle1" mt={2} fontWeight="bold">Personal Information</Typography>
-      <Grid container spacing={2} mt={1}>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="body2" color="text.secondary">Full Name</Typography>
-          <Typography variant="body1">{personalInfo.fullName}</Typography>
+  const renderReview = () => (
+    <Box>
+      <Grid container spacing={2}>
+        <Grid xs={12}>
+          <Typography variant="h6">Review Your Information</Typography>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="body2" color="text.secondary">Date of Birth</Typography>
-          <Typography variant="body1">{personalInfo.dateOfBirth}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="body2" color="text.secondary">Nationality</Typography>
-          <Typography variant="body1">{personalInfo.nationality}</Typography>
-        </Grid>
-        <Grid item xs={12}>
-          <Typography variant="body2" color="text.secondary">Address</Typography>
-          <Typography variant="body1">{personalInfo.address}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="body2" color="text.secondary">City</Typography>
-          <Typography variant="body1">{personalInfo.city}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="body2" color="text.secondary">Country</Typography>
-          <Typography variant="body1">{personalInfo.country}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="body2" color="text.secondary">Postal Code</Typography>
-          <Typography variant="body1">{personalInfo.postalCode}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="body2" color="text.secondary">Phone Number</Typography>
-          <Typography variant="body1">{personalInfo.phoneNumber}</Typography>
+
+        <Grid xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Grid container spacing={2}>
+              <Grid xs={12}>
+                <Typography variant="subtitle1">Personal Information</Typography>
+                <Typography>
+                  Full Name: {formData.verification.fullName}
+                </Typography>
+                <Typography>
+                  Date of Birth: {formData.verification.dateOfBirth}
+                </Typography>
+                <Typography>
+                  Nationality: {formData.verification.nationality}
+                </Typography>
+                <Typography>
+                  Address: {formData.verification.address}
+                </Typography>
+                <Typography>
+                  City: {formData.verification.city}
+                </Typography>
+                <Typography>
+                  Country: {formData.verification.country}
+                </Typography>
+                <Typography>
+                  Postal Code: {formData.verification.postalCode}
+                </Typography>
+                <Typography>
+                  Phone Number: {formData.verification.phoneNumber}
+                </Typography>
+              </Grid>
+
+              <Grid xs={12}>
+                <Typography variant="subtitle1">Uploaded Documents</Typography>
+                {formData.documents.map((doc, index) => (
+                  <Typography key={index}>
+                    {doc.documentType}: {doc.documentUrl}
+                  </Typography>
+                ))}
+              </Grid>
+            </Grid>
+          </Paper>
         </Grid>
       </Grid>
-      
-      <Typography variant="subtitle1" mt={4} mb={2} fontWeight="bold">Documents</Typography>
-      {documents.map((doc, index) => (
-        <Box key={index} mb={3} p={2} border="1px solid #e0e0e0" borderRadius={1}>
-          <Typography variant="subtitle2">Document {index + 1}</Typography>
-          <Grid container spacing={2} mt={1}>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="text.secondary">Document Type</Typography>
-              <Typography variant="body1">
-                {kycApi.getDocumentTypes().find(t => t.value === doc.type)?.label}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="text.secondary">Document Number</Typography>
-              <Typography variant="body1">{doc.documentNumber}</Typography>
-            </Grid>
-            {doc.issueDate && (
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2" color="text.secondary">Issue Date</Typography>
-                <Typography variant="body1">{doc.issueDate.format('YYYY-MM-DD')}</Typography>
-              </Grid>
-            )}
-            {doc.expiryDate && (
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2" color="text.secondary">Expiry Date</Typography>
-                <Typography variant="body1">{doc.expiryDate.format('YYYY-MM-DD')}</Typography>
-              </Grid>
-            )}
-            {doc.issuingCountry && (
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2" color="text.secondary">Issuing Country</Typography>
-                <Typography variant="body1">{doc.issuingCountry}</Typography>
-              </Grid>
-            )}
-            <Grid item xs={12}>
-              <Typography variant="body2" color="text.secondary">Files</Typography>
-              <Typography variant="body1">
-                Front: {doc.file?.name || 'None'}<br />
-                {doc.backFile && <>Back: {doc.backFile.name}<br /></>}
-                {doc.selfieFile && <>Selfie: {doc.selfieFile.name}</>}
-              </Typography>
-            </Grid>
-          </Grid>
-        </Box>
-      ))}
-    </Paper>
+    </Box>
   );
 
-  const renderSuccessStep = () => (
-    <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
-      <Typography variant="h6" color="success.main" gutterBottom>
-        Verification Submitted Successfully!
-      </Typography>
-      <Typography variant="body1" paragraph>
-        Your identity verification request has been submitted and is now pending review.
-        You will be notified once the verification process is complete.
-      </Typography>
-    </Paper>
-  );
-
-  const getStepContent = (step: number) => {
+  const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
         return renderPersonalInfoForm();
       case 1:
-        return renderDocumentUploadForm();
+        return renderDocumentUpload();
       case 2:
-        return renderReviewForm();
-      case 3:
-        return renderSuccessStep();
+        return renderReview();
       default:
-        return 'Unknown step';
+        return null;
     }
   };
+
+  const handleNext = () => {
+    if (activeStep === steps.length - 1) {
+      handleSubmit();
+    } else {
+      setActiveStep((prevStep) => prevStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (success) {
+    return (
+      <Alert severity="success">
+        {success}
+      </Alert>
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -739,38 +434,37 @@ const KycSubmissionForm: React.FC<KycSubmissionFormProps> = ({ onSuccess }) => {
         ))}
       </Stepper>
       
-      {getStepContent(activeStep)}
+      {renderStepContent(activeStep)}
+      
+      {errors.submit && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {errors.submit}
+        </Alert>
+      )}
       
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
         <Button
           variant="outlined"
-          disabled={activeStep === 0 || activeStep === 3}
+          disabled={activeStep === 0}
           onClick={handleBack}
         >
           Back
         </Button>
         
-        {activeStep === steps.length ? (
-          <Button 
+        {activeStep === steps.length - 1 ? (
+          <Button
             variant="contained"
             onClick={() => window.location.href = '/dashboard'}
           >
             Return to Dashboard
           </Button>
-        ) : activeStep === steps.length - 1 ? (
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Submit'}
-          </Button>
         ) : (
           <Button
             variant="contained"
             onClick={handleNext}
+            disabled={activeStep === 0 && !isPersonalInfoComplete()}
           >
-            Next
+            {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
           </Button>
         )}
       </Box>

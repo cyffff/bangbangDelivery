@@ -7,6 +7,14 @@ interface User {
   username: string;
   email: string;
   roles: string[];
+  fullName?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+  phoneNumber?: string;
 }
 
 interface AuthContextType {

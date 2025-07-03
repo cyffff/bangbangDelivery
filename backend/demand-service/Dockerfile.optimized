@@ -1,0 +1,34 @@
+# Multi-stage build for simple Java service
+FROM openjdk:11-jdk-slim AS builder
+WORKDIR /app
+
+# Copy and compile Java source
+COPY src/main/java/com/bangbang/demand/SimpleDemandService.java .
+RUN javac SimpleDemandService.java && \
+    jar cfe app.jar SimpleDemandService *.class
+
+# Optimized runtime stage
+FROM openjdk:11-jre-slim AS runtime
+WORKDIR /app
+
+# Install minimal packages and create user
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd -r appuser && \
+    useradd -r -g appuser appuser && \
+    chown -R appuser:appuser /app
+
+# Copy JAR file
+COPY --from=builder --chown=appuser:appuser /app/app.jar .
+
+USER appuser
+
+EXPOSE 8084
+
+# Optimized JVM settings
+ENTRYPOINT ["java", \
+    "-XX:+UseContainerSupport", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "-XX:+ExitOnOutOfMemoryError", \
+    "-jar", "app.jar"] 

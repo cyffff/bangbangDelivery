@@ -18,7 +18,8 @@ export enum DocumentType {
   UTILITY_BILL = 'UTILITY_BILL',
   BANK_STATEMENT = 'BANK_STATEMENT',
   TAX_CERTIFICATE = 'TAX_CERTIFICATE',
-  BUSINESS_REGISTRATION = 'BUSINESS_REGISTRATION'
+  BUSINESS_REGISTRATION = 'BUSINESS_REGISTRATION',
+  PROOF_OF_ADDRESS = 'PROOF_OF_ADDRESS'
 }
 
 // Interfaces
@@ -275,6 +276,11 @@ const kycApi = {
         value: DocumentType.BUSINESS_REGISTRATION,
         label: 'Business Registration',
         description: 'Official document showing business registration details'
+      },
+      {
+        value: DocumentType.PROOF_OF_ADDRESS,
+        label: 'Proof of Address',
+        description: 'Document proving the address of the document holder'
       }
     ];
   }

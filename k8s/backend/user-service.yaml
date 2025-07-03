@@ -6,7 +6,7 @@ metadata:
   labels:
     app: user-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: user-service
@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: user-service
-        image: bangbangdelivery-user-service:latest
-        imagePullPolicy: IfNotPresent
+        image: localhost:5000/bangbang-user-service:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8082
         env:
@@ -51,11 +51,11 @@ spec:
           timeoutSeconds: 5
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
 ---
 apiVersion: v1
 kind: Service

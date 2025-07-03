@@ -6,7 +6,7 @@ metadata:
   labels:
     app: journey-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: journey-service
@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: journey-service
-        image: bangbangdelivery-journey-service:latest
-        imagePullPolicy: IfNotPresent
+        image: yunf66/bangbang-journey-service:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8085
         livenessProbe:

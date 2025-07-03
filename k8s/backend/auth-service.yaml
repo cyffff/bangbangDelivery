@@ -6,7 +6,7 @@ metadata:
   labels:
     app: auth-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: auth-service
@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: bangbangdelivery-auth-service:latest
-        imagePullPolicy: IfNotPresent
+        image: yunf66/bangbang-auth-service:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8081
         env:
@@ -29,7 +29,7 @@ spec:
         - name: SPRING_MAIN_ALLOW-BEAN-DEFINITION-OVERRIDING
           value: "true"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://mysql:3306/bangbang_auth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
+          value: "jdbc:mysql://mysql:3306/bangbang_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
         - name: SPRING_DATASOURCE_USERNAME
           value: "root"
         - name: SPRING_DATASOURCE_PASSWORD
@@ -72,11 +72,11 @@ spec:
           timeoutSeconds: 5
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
 ---
 apiVersion: v1
 kind: Service

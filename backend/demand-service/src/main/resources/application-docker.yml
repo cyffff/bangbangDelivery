@@ -1,11 +1,11 @@
 server:
-  port: ${SERVER_PORT:8085}
+  port: ${SERVER_PORT:8084}
   servlet:
     context-path: /
 
 spring:
   application:
-    name: journey-service
+    name: demand-service
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -35,5 +35,5 @@ management:
 
 logging:
   level:
-    com.bangbang.journey: DEBUG
+    com.bangbang.demand: DEBUG
     org.springframework.web: INFO 

@@ -6,7 +6,7 @@ metadata:
   labels:
     app: demand-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: demand-service
@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: demand-service
-        image: bangbangdelivery-demand-service:latest
-        imagePullPolicy: IfNotPresent
+        image: yunf66/bangbang-demand-service:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8084
         livenessProbe:

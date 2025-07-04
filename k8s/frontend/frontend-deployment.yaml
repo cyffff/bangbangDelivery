@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: localhost:5000/bangbang-frontend:latest
+        image: yunf66/bangbang-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -25,7 +25,7 @@ spec:
         - name: NODE_ENV
           value: "production"
         - name: REACT_APP_API_URL
-          value: "http://gateway"
+          value: "http://gateway:80"
         - name: SKIP_PREFLIGHT_CHECK
           value: "true"
         - name: DISABLE_ESLINT_PLUGIN
@@ -50,11 +50,11 @@ spec:
           timeoutSeconds: 5
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "100m"
+            memory: "64Mi"
+            cpu: "50m"
           limits:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "128Mi"
+            cpu: "100m"
 ---
 apiVersion: v1
 kind: Service
